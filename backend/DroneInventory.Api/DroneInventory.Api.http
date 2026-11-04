@@ -19,3 +19,12 @@ Content-Type: application/json
 }
 
 ###
+
+POST {{DroneInventory.Api_HostAddress}}/api/student-groups
+Content-Type: application/json
+
+{
+  "name": "Group 3"
+}
+
+###
