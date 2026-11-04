@@ -38,6 +38,13 @@ public class StudentGroupService(AppDbContext context) : IStudentGroupService
         return new StudentGroupDto(group.Id, group.Name);
     }
 
+    public async Task<IReadOnlyList<StudentGroupDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        await context.StudentGroups
+            .AsNoTracking()
+            .OrderBy(g => g.Name)
+            .Select(g => new StudentGroupDto(g.Id, g.Name))
+            .ToListAsync(cancellationToken);
+
     private static ConflictException DuplicateName(string name) =>
         new($"A StudentGroup named \"{name}\" already exists.");
 }
