@@ -32,7 +32,7 @@
 ## 6. Frontend setup
 
 - [x] 6.1 Replace the placeholder page with a layout and navigation (Drones, Student Groups, Loans, History), add `provideHttpClient()`, the API base URL constant and routes; verify `ng build` succeeds and navigation works in the browser
-- [ ] 6.2 Add typed models and API services for Drone, StudentGroup and Loan with an error helper that extracts the `ProblemDetails` message; verify with Vitest unit tests using `HttpTestingController`
+- [x] 6.2 Add typed models and API services for Drone, StudentGroup and Loan with an error helper that extracts the `ProblemDetails` message; verify with Vitest unit tests using `HttpTestingController` (#16)
 
 ## 7. Frontend: pages
 
