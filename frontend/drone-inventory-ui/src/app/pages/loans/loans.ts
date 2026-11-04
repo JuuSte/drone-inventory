@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { formatDate } from '../../core/date';
 import { problemDetailsMessage } from '../../core/problem-details';
 import { Drone } from '../../models/drone.model';
 import { Loan } from '../../models/loan.model';
@@ -7,12 +8,6 @@ import { StudentGroup } from '../../models/student-group.model';
 import { DroneService } from '../../services/drone.service';
 import { LoanService } from '../../services/loan.service';
 import { StudentGroupService } from '../../services/student-group.service';
-
-/** Formats an ISO `yyyy-MM-dd` date as `dd.MM.yyyy` without going through `Date`. */
-export function formatDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split('-');
-  return year && month && day ? `${day}.${month}.${year}` : isoDate;
-}
 
 @Component({
   selector: 'app-loans-page',
