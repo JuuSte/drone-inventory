@@ -1,6 +1,6 @@
 @DroneInventory.Api_HostAddress = http://localhost:5168
 
-GET {{DroneInventory.Api_HostAddress}}/weatherforecast/
+GET {{DroneInventory.Api_HostAddress}}/openapi/v1.json
 Accept: application/json
 
 ###
