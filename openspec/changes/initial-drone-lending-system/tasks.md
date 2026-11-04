@@ -3,7 +3,7 @@
 ## 1. Backend setup
 
 - [x] 1.1 Remove the `WeatherForecast` sample, add `Microsoft.EntityFrameworkCore.Sqlite` and `Microsoft.EntityFrameworkCore.Design`, add CORS for `http://localhost:4200` and a `ProblemDetails` exception handler for `ValidationException` (400), `NotFoundException` (404) and `ConflictException` (409) (design D3); verify `dotnet build` succeeds and `*.db` is git-ignored (#1)
-- [ ] 1.2 Create the xUnit test project `backend/DroneInventory.Api.Tests` referencing the API, with a test helper that builds an `AppDbContext` on SQLite in-memory and a fake `TimeProvider` (design D6); verify `dotnet test` runs with a passing smoke test (#2)
+- [x] 1.2 Create the xUnit test project `backend/DroneInventory.Api.Tests` referencing the API, with a test helper that builds an `AppDbContext` on SQLite in-memory and a fake `TimeProvider` (design D6); verify `dotnet test` runs with a passing smoke test (#2)
 
 ## 2. Backend: data model
 
