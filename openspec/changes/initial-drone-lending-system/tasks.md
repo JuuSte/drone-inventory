@@ -7,7 +7,7 @@
 
 ## 2. Backend: data model
 
-- [ ] 2.1 Add entities `Drone`, `StudentGroup`, `Loan`, `LoanItem`, enums `LoanStatus` and `LoanItemType` (stored as strings), `AppDbContext` with unique `NOCASE` Name indexes, the filtered unique index on active Loans per Drone and `Restrict` delete behavior (design D1, D2); create the `InitialCreate` migration applied on startup; verify `dotnet ef database update` creates the tables and a test confirms a second active Loan for the same Drone is refused by the database (#3)
+- [x] 2.1 Add entities `Drone`, `StudentGroup`, `Loan`, `LoanItem`, enums `LoanStatus` and `LoanItemType` (stored as strings), `AppDbContext` with unique `NOCASE` Name indexes, the filtered unique index on active Loans per Drone and `Restrict` delete behavior (design D1, D2); create the `InitialCreate` migration applied on startup; verify `dotnet ef database update` creates the tables and a test confirms a second active Loan for the same Drone is refused by the database (#3)
 
 ## 3. Backend: drone-management
 
