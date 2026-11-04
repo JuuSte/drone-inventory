@@ -36,7 +36,7 @@
 
 ## 7. Frontend: pages
 
-- [ ] 7.1 Implement the `/drones` page: list with Name, status and Description plus a create form showing backend errors; verify manually that creating "TELLO-07" shows it as "Available" and an empty name shows the error (#17)
+- [x] 7.1 Implement the `/drones` page: list with Name, status and Description plus a create form showing backend errors; verify manually that creating "TELLO-07" shows it as "Available" and an empty name shows the error (#17)
 - [ ] 7.2 Implement the `/student-groups` page: list plus create form showing backend errors; verify manually that "Group 3" can be created and a duplicate is rejected (#18)
 - [ ] 7.3 Implement the loan form on `/loans` (select available Drone and StudentGroup, battery and propeller quantities); verify manually that loaning "TELLO-07" to "Group 3" with 4/8 succeeds and a second Loan of "TELLO-07" shows the error (#19)
 - [ ] 7.4 Implement the active Loans table on `/loans` (Group | Drone | Batteries | Propellers | LoanDate as `dd.MM.yyyy`) with a Return button; verify manually that returning removes the row and the Drone shows "Available" again (#20)
