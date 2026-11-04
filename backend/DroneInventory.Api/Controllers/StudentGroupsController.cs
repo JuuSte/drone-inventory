@@ -8,6 +8,11 @@ namespace DroneInventory.Api.Controllers;
 [Route("api/student-groups")]
 public class StudentGroupsController(IStudentGroupService studentGroupService) : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<StudentGroupDto>>(StatusCodes.Status200OK)]
+    public async Task<IReadOnlyList<StudentGroupDto>> GetAll(CancellationToken cancellationToken) =>
+        await studentGroupService.GetAllAsync(cancellationToken);
+
     [HttpPost]
     [ProducesResponseType<StudentGroupDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]

@@ -20,6 +20,11 @@ Content-Type: application/json
 
 ###
 
+GET {{DroneInventory.Api_HostAddress}}/api/student-groups
+Accept: application/json
+
+###
+
 POST {{DroneInventory.Api_HostAddress}}/api/student-groups
 Content-Type: application/json
 
