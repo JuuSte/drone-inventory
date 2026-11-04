@@ -1,0 +1,51 @@
+schema: spec-driven
+
+context: |
+  Project: Drone Lending System (drone-inventory)
+  Drones and accessories are loaned to student groups at a school.
+  The system replaces a paper list on the cabinet door.
+
+  Technology stack:
+  - Backend: C#, ASP.NET Core 10 Web API, Entity Framework Core, SQLite
+  - Frontend: Angular, TypeScript
+  - API: REST/JSON
+
+  Architecture:
+  - Frontend code is located in /frontend/drone-inventory-ui
+  - Backend code is located in /backend/DroneInventory.Api
+  - The frontend communicates exclusively with the backend REST API.
+  - Business logic and validation are implemented in the backend.
+  - The frontend must never access the database directly.
+
+  Domain concepts (ubiquitous language - do not use synonyms):
+  - Drone: Id, Name, Description
+  - StudentGroup: Id, Name
+  - Loan: Id, DroneId, StudentGroupId, LoanDate, ReturnDate, Status (Active | Returned)
+  - LoanItem: Id, LoanId, Type (Battery | Propeller), Quantity
+
+  Domain rules:
+  - A drone can have at most one active loan.
+  - Only available drones can be loaned.
+  - Returning a loan makes the drone available again.
+  - Accessory quantities are integers and must not be negative.
+  - Returned loans are never deleted (loan history).
+  - Batteries and propellers are tracked as quantities only.
+  - Drone availability (Available | Loaned) is derived from the active loan,
+    it is not stored as a separate field.
+
+  Out of scope (initial version):
+  - Login, user accounts, roles
+  - Individual battery inventory (BAT-001 ...)
+  - Reservations in advance
+  - Damage management, return differences
+  - Statistics, reports, exports
+
+rules:
+  specs:
+    - Use Given/When/Then scenarios for acceptance criteria.
+    - Describe behavior, not implementation details.
+    - Use the domain concepts exactly as defined in the context.
+  tasks:
+    - Tasks must be small, independent and testable.
+    - Separate backend and frontend tasks.
+    - Every Given/When/Then scenario needs a backend test task.
