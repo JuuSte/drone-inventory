@@ -1,5 +1,6 @@
 using DroneInventory.Api.Data;
 using DroneInventory.Api.Exceptions;
+using DroneInventory.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 const string FrontendCorsPolicy = "Frontend";
@@ -12,6 +13,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IDroneService, DroneService>();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();

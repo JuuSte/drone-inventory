@@ -4,3 +4,13 @@ GET {{DroneInventory.Api_HostAddress}}/openapi/v1.json
 Accept: application/json
 
 ###
+
+POST {{DroneInventory.Api_HostAddress}}/api/drones
+Content-Type: application/json
+
+{
+  "name": "TELLO-07",
+  "description": "SSID: TELLO-9FA21B, right propeller guard damaged"
+}
+
+###

@@ -11,7 +11,7 @@
 
 ## 3. Backend: drone-management
 
-- [ ] 3.1 Implement `DroneService.Create` and `POST /api/drones` (trimmed name required, unique) with xUnit tests for scenarios "Drone is created", "Name is required" and "Duplicate Name"; verify the tests pass (#4)
+- [x] 3.1 Implement `DroneService.Create` and `POST /api/drones` (trimmed name required, unique) with xUnit tests for scenarios "Drone is created", "Name is required" and "Duplicate Name"; verify the tests pass (#4)
 - [ ] 3.2 Implement `DroneService.GetAll` and `GET /api/drones` with status derived from the active Loan, with xUnit tests for scenarios "Status derived from active Loan" and "Drone with only returned Loans is available"; verify the tests pass (#5)
 
 ## 4. Backend: student-group-management
