@@ -5,6 +5,11 @@ Accept: application/json
 
 ###
 
+GET {{DroneInventory.Api_HostAddress}}/api/drones
+Accept: application/json
+
+###
+
 POST {{DroneInventory.Api_HostAddress}}/api/drones
 Content-Type: application/json
 

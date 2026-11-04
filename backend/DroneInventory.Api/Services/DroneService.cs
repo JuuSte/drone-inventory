@@ -39,6 +39,17 @@ public class DroneService(AppDbContext context) : IDroneService
         return new DroneDto(drone.Id, drone.Name, drone.Description, DroneStatus.Available);
     }
 
+    public async Task<IReadOnlyList<DroneDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        await context.Drones
+            .AsNoTracking()
+            .OrderBy(d => d.Name)
+            .Select(d => new DroneDto(
+                d.Id,
+                d.Name,
+                d.Description,
+                d.Loans.Any(l => l.Status == LoanStatus.Active) ? DroneStatus.Loaned : DroneStatus.Available))
+            .ToListAsync(cancellationToken);
+
     private static ConflictException DuplicateName(string name) =>
         new($"A Drone named \"{name}\" already exists.");
 }
