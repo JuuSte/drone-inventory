@@ -16,7 +16,7 @@
 
 ## 4. Backend: student-group-management
 
-- [ ] 4.1 Implement `StudentGroupService.Create` and `POST /api/student-groups` with xUnit tests for scenarios "StudentGroup is created", "Name is required" and "Duplicate Name"; verify the tests pass (#6)
+- [x] 4.1 Implement `StudentGroupService.Create` and `POST /api/student-groups` with xUnit tests for scenarios "StudentGroup is created", "Name is required" and "Duplicate Name"; verify the tests pass (#6)
 - [ ] 4.2 Implement `StudentGroupService.GetAll` and `GET /api/student-groups` with an xUnit test for scenario "StudentGroups are listed"; verify the test passes (#7)
 
 ## 5. Backend: drone-lending
