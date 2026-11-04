@@ -8,6 +8,11 @@ namespace DroneInventory.Api.Controllers;
 [Route("api/drones")]
 public class DronesController(IDroneService droneService) : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<DroneDto>>(StatusCodes.Status200OK)]
+    public async Task<IReadOnlyList<DroneDto>> GetAll(CancellationToken cancellationToken) =>
+        await droneService.GetAllAsync(cancellationToken);
+
     [HttpPost]
     [ProducesResponseType<DroneDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
