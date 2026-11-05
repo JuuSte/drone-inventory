@@ -21,7 +21,7 @@
 
 ## 5. Backend: drone-lending
 
-- [ ] 5.1 Implement `LoanService.Create` and `POST /api/loans` (LoanDate from `TimeProvider`, Status Active) with xUnit tests for scenarios "Available Drone is loaned" and "Unknown Drone or StudentGroup"; verify the tests pass (#8)
+- [x] 5.1 Implement `LoanService.Create` and `POST /api/loans` (LoanDate from `TimeProvider`, Status Active) with xUnit tests for scenarios "Available Drone is loaned" and "Unknown Drone or StudentGroup"; verify the tests pass (#8)
 - [ ] 5.2 Reject a Loan for a Drone with an active Loan (409, including mapping the index `DbUpdateException`) with an xUnit test for scenario "Drone is already loaned"; verify the test passes (#9)
 - [ ] 5.3 Create Battery and Propeller LoanItems and reject negative quantities (400) with xUnit tests for scenarios "Loan with batteries and propellers" and "Negative quantity"; verify the tests pass (#10)
 - [ ] 5.4 Implement `GET /api/loans/active` with xUnit tests for scenarios "Active Loan is listed" (fixed date 19.08.2026) and "Returned Loan is not listed as active"; verify the tests pass (#11)
