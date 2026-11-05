@@ -16,6 +16,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IDroneService, DroneService>();
 builder.Services.AddScoped<IStudentGroupService, StudentGroupService>();
+builder.Services.AddScoped<ILoanService, LoanService>();
+builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
