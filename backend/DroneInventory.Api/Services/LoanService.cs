@@ -32,7 +32,7 @@ public class LoanService(AppDbContext context, TimeProvider timeProvider) : ILoa
         {
             Drone = drone,
             StudentGroup = group,
-            LoanDate = DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime),
+            LoanDate = Today(),
             Status = LoanStatus.Active,
             Items =
             [
@@ -73,6 +73,30 @@ public class LoanService(AppDbContext context, TimeProvider timeProvider) : ILoa
                 l.ReturnDate,
                 l.Status.ToString()))
             .ToListAsync(cancellationToken);
+
+    public async Task<LoanDto> ReturnAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var loan = await context.Loans
+            .Include(l => l.Drone)
+            .Include(l => l.StudentGroup)
+            .Include(l => l.Items)
+            .SingleOrDefaultAsync(l => l.Id == id, cancellationToken)
+            ?? throw new NotFoundException($"Loan with Id {id} was not found.");
+
+        if (loan.Status == LoanStatus.Returned)
+        {
+            throw new ConflictException($"Loan with Id {id} is already returned.");
+        }
+
+        // The Drone becomes available again because it no longer has an active Loan (derived, not stored).
+        loan.Status = LoanStatus.Returned;
+        loan.ReturnDate = Today();
+        await context.SaveChangesAsync(cancellationToken);
+
+        return ToDto(loan);
+    }
+
+    private DateOnly Today() => DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime);
 
     private static ConflictException AlreadyLoaned(string droneName) =>
         new($"The Drone \"{droneName}\" is already loaned.");

@@ -23,4 +23,11 @@ public class LoansController(ILoanService loanService) : ControllerBase
         var loan = await loanService.CreateAsync(request, cancellationToken);
         return Created($"/api/loans/{loan.Id}", loan);
     }
+
+    [HttpPost("{id:int}/return")]
+    [ProducesResponseType<LoanDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<LoanDto> Return(int id, CancellationToken cancellationToken) =>
+        await loanService.ReturnAsync(id, cancellationToken);
 }
