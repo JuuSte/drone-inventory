@@ -11,4 +11,7 @@ public interface ILoanService
     /// Throws ConflictException if the Drone already has an active Loan.
     /// </summary>
     Task<LoanDto> CreateAsync(CreateLoanRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Lists all Loans with Status Active, oldest LoanDate first. Returned Loans are not included.</summary>
+    Task<IReadOnlyList<LoanDto>> GetActiveAsync(CancellationToken cancellationToken = default);
 }
