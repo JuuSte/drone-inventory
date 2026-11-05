@@ -14,4 +14,10 @@ public interface ILoanService
 
     /// <summary>Lists all Loans with Status Active, oldest LoanDate first. Returned Loans are not included.</summary>
     Task<IReadOnlyList<LoanDto>> GetActiveAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns an active Loan: sets Status Returned and today's date as ReturnDate.
+    /// Throws NotFoundException for an unknown Loan and ConflictException if the Loan is already returned.
+    /// </summary>
+    Task<LoanDto> ReturnAsync(int id, CancellationToken cancellationToken = default);
 }
