@@ -55,6 +55,25 @@ public class LoanService(AppDbContext context, TimeProvider timeProvider) : ILoa
         return ToDto(loan);
     }
 
+    public async Task<IReadOnlyList<LoanDto>> GetActiveAsync(CancellationToken cancellationToken = default) =>
+        await context.Loans
+            .AsNoTracking()
+            .Where(l => l.Status == LoanStatus.Active)
+            .OrderBy(l => l.LoanDate)
+            .ThenBy(l => l.Id)
+            .Select(l => new LoanDto(
+                l.Id,
+                l.DroneId,
+                l.Drone.Name,
+                l.StudentGroupId,
+                l.StudentGroup.Name,
+                l.Items.Where(i => i.Type == LoanItemType.Battery).Sum(i => i.Quantity),
+                l.Items.Where(i => i.Type == LoanItemType.Propeller).Sum(i => i.Quantity),
+                l.LoanDate,
+                l.ReturnDate,
+                l.Status.ToString()))
+            .ToListAsync(cancellationToken);
+
     private static ConflictException AlreadyLoaned(string droneName) =>
         new($"The Drone \"{droneName}\" is already loaned.");
 

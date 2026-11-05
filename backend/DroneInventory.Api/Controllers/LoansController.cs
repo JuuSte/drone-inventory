@@ -8,6 +8,11 @@ namespace DroneInventory.Api.Controllers;
 [Route("api/loans")]
 public class LoansController(ILoanService loanService) : ControllerBase
 {
+    [HttpGet("active")]
+    [ProducesResponseType<IReadOnlyList<LoanDto>>(StatusCodes.Status200OK)]
+    public async Task<IReadOnlyList<LoanDto>> GetActive(CancellationToken cancellationToken) =>
+        await loanService.GetActiveAsync(cancellationToken);
+
     [HttpPost]
     [ProducesResponseType<LoanDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
