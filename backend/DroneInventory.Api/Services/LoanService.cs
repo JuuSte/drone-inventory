@@ -11,6 +11,12 @@ public class LoanService(AppDbContext context, TimeProvider timeProvider) : ILoa
 {
     public async Task<LoanDto> CreateAsync(CreateLoanRequest request, CancellationToken cancellationToken = default)
     {
+        // Quantities must be integers >= 0 (REQ-006).
+        if (request.Batteries < 0 || request.Propellers < 0)
+        {
+            throw new ValidationException("Quantities must be greater than or equal to 0.");
+        }
+
         var drone = await context.Drones.FindAsync([request.DroneId], cancellationToken)
             ?? throw new NotFoundException($"Drone with Id {request.DroneId} was not found.");
         var group = await context.StudentGroups.FindAsync([request.StudentGroupId], cancellationToken)
@@ -27,7 +33,12 @@ public class LoanService(AppDbContext context, TimeProvider timeProvider) : ILoa
             Drone = drone,
             StudentGroup = group,
             LoanDate = DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime),
-            Status = LoanStatus.Active
+            Status = LoanStatus.Active,
+            Items =
+            [
+                new LoanItem { Type = LoanItemType.Battery, Quantity = request.Batteries },
+                new LoanItem { Type = LoanItemType.Propeller, Quantity = request.Propellers }
+            ]
         };
         context.Loans.Add(loan);
 
