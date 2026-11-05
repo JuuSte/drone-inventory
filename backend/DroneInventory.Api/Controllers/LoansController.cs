@@ -11,6 +11,7 @@ public class LoansController(ILoanService loanService) : ControllerBase
     [HttpPost]
     [ProducesResponseType<LoanDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<LoanDto>> Create(CreateLoanRequest request, CancellationToken cancellationToken)
     {
         var loan = await loanService.CreateAsync(request, cancellationToken);

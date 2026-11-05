@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Time.Testing;
 
 namespace DroneInventory.Api.Tests.Infrastructure;
@@ -43,6 +44,13 @@ public sealed class SqliteTestDatabase<TContext> : IDisposable where TContext : 
 
     /// <summary>Creates a new context on the shared in-memory database.</summary>
     public TContext CreateContext() => _factory(_options);
+
+    /// <summary>Creates a new context on the shared in-memory database with additional EF Core interceptors.</summary>
+    public TContext CreateContext(params IInterceptor[] interceptors) =>
+        _factory(new DbContextOptionsBuilder<TContext>()
+            .UseSqlite(_connection)
+            .AddInterceptors(interceptors)
+            .Options);
 
     public void Dispose() => _connection.Dispose();
 }
