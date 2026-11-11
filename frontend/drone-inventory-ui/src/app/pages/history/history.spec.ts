@@ -49,7 +49,7 @@ describe('HistoryPage', () => {
     httpMock.expectOne(url).flush(returned);
     fixture.detectChanges();
 
-    expect(rows()).toEqual([['Group 3', 'TELLO-07', '4', '8', '19.08.2026', '20.08.2026']]);
+    expect(rows()).toEqual([['Group 3', 'TELLO-07', '4', '8', '19.08.2026', '20.08.2026', 'Returned']]);
   });
 
   it('should show both Loans after the same Drone was loaned and returned twice', () => {
@@ -60,8 +60,8 @@ describe('HistoryPage', () => {
     fixture.detectChanges();
 
     expect(rows()).toEqual([
-      ['Group 3', 'TELLO-07', '4', '8', '19.08.2026', '20.08.2026'],
-      ['Group 3', 'TELLO-07', '4', '8', '21.08.2026', '22.08.2026']
+      ['Group 3', 'TELLO-07', '4', '8', '19.08.2026', '20.08.2026', 'Returned'],
+      ['Group 3', 'TELLO-07', '4', '8', '21.08.2026', '22.08.2026', 'Returned']
     ]);
   });
 
@@ -80,5 +80,44 @@ describe('HistoryPage', () => {
     fixture.detectChanges();
 
     expect(element('[role="alert"]').textContent?.trim()).toBe('History is unavailable.');
+  });
+
+  // web-ui scenarios (UI-001, UI-002, UI-003)
+
+  // GIVEN a returned Loan exists
+  // WHEN the History page is shown
+  // THEN the returned Loan shows the badge "Returned"
+  it('Loan status badges (Returned)', () => {
+    httpMock.expectOne(url).flush(returned);
+    fixture.detectChanges();
+
+    const badge = element('.history-list tbody .badge');
+    expect(badge.textContent?.trim()).toBe('Returned');
+    expect(badge.classList).toContain('badge--success');
+  });
+
+  // WHEN the History page is opened
+  // THEN the page shows a single main heading with the page name
+  it('Every page has a title', () => {
+    httpMock.expectOne(url).flush([]);
+    fixture.detectChanges();
+
+    const headings = (fixture.nativeElement as HTMLElement).querySelectorAll('h1');
+    expect(headings.length).toBe(1);
+    expect(headings[0].textContent?.trim()).toBe('History');
+  });
+
+  // Quantities right-aligned, table scrolls inside its card (UI-003, UI-007).
+  it('right-aligns the quantities and wraps the table for horizontal scrolling', () => {
+    httpMock.expectOne(url).flush(returned);
+    fixture.detectChanges();
+
+    const cells = Array.from(element('.history-list tbody tr').querySelectorAll('td'));
+    const headers = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.history-list th'));
+    for (const index of [2, 3]) {
+      expect(cells[index].classList).toContain('num');
+      expect(headers[index].classList).toContain('num');
+    }
+    expect(element('.history-list').closest('.table-wrap')).not.toBeNull();
   });
 });
