@@ -108,6 +108,24 @@ public class AppDbContextTests : IDisposable
         await Assert.ThrowsAsync<DbUpdateException>(() => delete.SaveChangesAsync());
     }
 
+    // Database layer of "StudentGroup with loan history" (REQ-012, design D2): the Restrict foreign key
+    // refuses the delete even without the service check.
+    [Fact]
+    public async Task StudentGroup_with_Loans_cannot_be_deleted()
+    {
+        var (drone, first, _) = await SeedAsync();
+        await using (var context = _db.CreateContext())
+        {
+            context.Loans.Add(ActiveLoan(drone.Id, first.Id));
+            await context.SaveChangesAsync();
+        }
+
+        await using var delete = _db.CreateContext();
+        delete.StudentGroups.Remove(await delete.StudentGroups.SingleAsync(g => g.Id == first.Id));
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => delete.SaveChangesAsync());
+    }
+
     [Fact]
     public async Task Enums_are_stored_as_strings()
     {
