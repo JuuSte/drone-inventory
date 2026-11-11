@@ -56,23 +56,34 @@ public class LoanService(AppDbContext context, TimeProvider timeProvider) : ILoa
     }
 
     public async Task<IReadOnlyList<LoanDto>> GetActiveAsync(CancellationToken cancellationToken = default) =>
-        await context.Loans
-            .AsNoTracking()
-            .Where(l => l.Status == LoanStatus.Active)
-            .OrderBy(l => l.LoanDate)
-            .ThenBy(l => l.Id)
-            .Select(l => new LoanDto(
-                l.Id,
-                l.DroneId,
-                l.Drone.Name,
-                l.StudentGroupId,
-                l.StudentGroup.Name,
-                l.Items.Where(i => i.Type == LoanItemType.Battery).Sum(i => i.Quantity),
-                l.Items.Where(i => i.Type == LoanItemType.Propeller).Sum(i => i.Quantity),
-                l.LoanDate,
-                l.ReturnDate,
-                l.Status.ToString()))
+        await ProjectToDto(context.Loans
+                .AsNoTracking()
+                .Where(l => l.Status == LoanStatus.Active)
+                .OrderBy(l => l.LoanDate)
+                .ThenBy(l => l.Id))
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<LoanDto>> GetHistoryAsync(CancellationToken cancellationToken = default) =>
+        // Returned Loans are never deleted, so every past Loan of a Drone stays in the history (REQ-010).
+        await ProjectToDto(context.Loans
+                .AsNoTracking()
+                .Where(l => l.Status == LoanStatus.Returned)
+                .OrderByDescending(l => l.ReturnDate)
+                .ThenByDescending(l => l.Id))
+            .ToListAsync(cancellationToken);
+
+    private static IQueryable<LoanDto> ProjectToDto(IQueryable<Loan> loans) =>
+        loans.Select(l => new LoanDto(
+            l.Id,
+            l.DroneId,
+            l.Drone.Name,
+            l.StudentGroupId,
+            l.StudentGroup.Name,
+            l.Items.Where(i => i.Type == LoanItemType.Battery).Sum(i => i.Quantity),
+            l.Items.Where(i => i.Type == LoanItemType.Propeller).Sum(i => i.Quantity),
+            l.LoanDate,
+            l.ReturnDate,
+            l.Status.ToString()));
 
     public async Task<LoanDto> ReturnAsync(int id, CancellationToken cancellationToken = default)
     {
