@@ -1,0 +1,48 @@
+# drone-management Specification
+
+## Purpose
+
+Lets staff register the drones that can be loaned and see every Drone with its current availability, which is derived from whether the Drone has an active Loan.
+
+## Requirements
+
+### Requirement: Create Drone
+The system SHALL allow creating a Drone with a Name and a free-text Description. A newly created Drone has no Loan and is therefore "Available". (REQ-001)
+
+#### Scenario: Drone is created
+- **GIVEN** no Drone named "TELLO-07" exists
+- **WHEN** a Drone with Name "TELLO-07" and Description "SSID: TELLO-9FA21B, right propeller guard damaged" is created
+- **THEN** the Drone is stored with that Name and Description
+- **AND** its status is "Available"
+
+### Requirement: Drone Name is required
+The system SHALL reject creating a Drone whose Name is empty or consists only of whitespace. (REQ-001)
+
+#### Scenario: Name is required
+- **GIVEN** the Name is empty
+- **WHEN** a Drone is created
+- **THEN** the request is rejected as invalid
+- **AND** no Drone is stored
+
+### Requirement: Drone Name is unique
+The system SHALL reject creating a Drone whose Name is already used by another Drone.
+
+#### Scenario: Duplicate Name
+- **GIVEN** a Drone named "TELLO-07" exists
+- **WHEN** another Drone with Name "TELLO-07" is created
+- **THEN** the request is rejected
+- **AND** only one Drone named "TELLO-07" exists
+
+### Requirement: List Drones
+The system SHALL list all Drones with Name, status and Description. The status SHALL be "Loaned" if the Drone has an active Loan and "Available" otherwise; it is derived and never stored. (REQ-002)
+
+#### Scenario: Status derived from active Loan
+- **GIVEN** "TELLO-02" has an active Loan and "TELLO-07" has none
+- **WHEN** the Drone list is requested
+- **THEN** "TELLO-02" is shown as "Loaned"
+- **AND** "TELLO-07" is shown as "Available"
+
+#### Scenario: Drone with only returned Loans is available
+- **GIVEN** "TELLO-07" has a Loan with Status "Returned" and no active Loan
+- **WHEN** the Drone list is requested
+- **THEN** "TELLO-07" is shown as "Available"
