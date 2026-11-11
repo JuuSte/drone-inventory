@@ -3,71 +3,70 @@ import { formatDate } from '../../core/date';
 import { problemDetailsMessage } from '../../core/problem-details';
 import { LoanHistoryEntry } from '../../models/loan.model';
 import { LoanService } from '../../services/loan.service';
+import { StatusBadge } from '../../components/status-badge/status-badge';
 
 @Component({
   selector: 'app-history-page',
+  imports: [StatusBadge],
   template: `
     <h1>History</h1>
 
-    @if (errorMessage(); as message) {
-      <p class="error" role="alert">{{ message }}</p>
-    }
+    <section class="card" aria-labelledby="returned-loans-heading">
+      <h2 id="returned-loans-heading">Returned Loans</h2>
 
-    <table class="history-list">
-      <thead>
-        <tr>
-          <th>Group</th>
-          <th>Drone</th>
-          <th>Batteries</th>
-          <th>Propellers</th>
-          <th>LoanDate</th>
-          <th>ReturnDate</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (loan of loans(); track loan.id) {
-          <tr>
-            <td>{{ loan.studentGroupName }}</td>
-            <td>{{ loan.droneName }}</td>
-            <td>{{ loan.batteries }}</td>
-            <td>{{ loan.propellers }}</td>
-            <td>{{ formatDate(loan.loanDate) }}</td>
-            <td>{{ formatDate(loan.returnDate) }}</td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="6">No returned loans yet.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+      @if (errorMessage(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
+
+      <div class="table-wrap">
+        <table class="history-list">
+          <thead>
+            <tr>
+              <th scope="col">StudentGroup</th>
+              <th scope="col">Drone</th>
+              <th scope="col" class="num">Batteries</th>
+              <th scope="col" class="num">Propellers</th>
+              <th scope="col">LoanDate</th>
+              <th scope="col">ReturnDate</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (loan of loans(); track loan.id) {
+              <tr>
+                <td>{{ loan.studentGroupName }}</td>
+                <td class="name">{{ loan.droneName }}</td>
+                <td class="num">{{ loan.batteries }}</td>
+                <td class="num">{{ loan.propellers }}</td>
+                <td class="date">{{ formatDate(loan.loanDate) }}</td>
+                <td class="date">{{ formatDate(loan.returnDate) }}</td>
+                <!-- /api/loans/history only returns Loans with Status Returned. -->
+                <td><app-status-badge status="Returned" /></td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="empty" colspan="7">No returned loans yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   `,
   styles: `
-    .error {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #e5a3a3;
-      border-radius: 0.375rem;
-      background: #fdf1f1;
-      color: #a12a2a;
+    .name {
+      font-weight: 600;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .date {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
 
-    th,
-    td {
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid #dfe3ea;
-      text-align: left;
-    }
-
-    th {
-      font-size: 0.8125rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #6b7488;
+    .empty {
+      padding: var(--space-4) var(--space-3);
+      text-align: center;
+      color: var(--text-muted);
     }
   `
 })
