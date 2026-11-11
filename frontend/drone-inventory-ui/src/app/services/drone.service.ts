@@ -16,4 +16,8 @@ export class DroneService {
   create(request: CreateDroneRequest): Observable<Drone> {
     return this.http.post<Drone>(this.baseUrl, request);
   }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

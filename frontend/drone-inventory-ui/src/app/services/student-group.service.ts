@@ -16,4 +16,8 @@ export class StudentGroupService {
   create(request: CreateStudentGroupRequest): Observable<StudentGroup> {
     return this.http.post<StudentGroup>(this.baseUrl, request);
   }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }
