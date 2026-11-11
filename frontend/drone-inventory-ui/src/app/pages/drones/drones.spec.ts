@@ -55,8 +55,8 @@ describe('DronesPage', () => {
       (row) => Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent?.trim())
     );
     expect(rows).toEqual([
-      ['TELLO-02', 'Loaned', 'no charger'],
-      ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B']
+      ['TELLO-02', 'Loaned', 'no charger', 'Delete'],
+      ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B', 'Delete']
     ]);
   });
 
@@ -246,5 +246,97 @@ describe('DronesPage', () => {
     fixture.detectChanges();
 
     expect(rowsText()).toEqual([['No drones yet.']]);
+  });
+
+  // web-ui scenarios (UI-008)
+
+  function deleteButton(name: string): HTMLButtonElement {
+    return element<HTMLButtonElement>(`button[aria-label="Delete Drone ${name}"]`)!;
+  }
+
+  function flushDrones(drones: Drone[]): void {
+    httpMock.expectOne(url).flush(drones);
+    fixture.detectChanges();
+  }
+
+  // GIVEN the Drone "TELLO-08" has no Loans
+  // WHEN the user presses "Delete" in the row of "TELLO-08"
+  // THEN the row of "TELLO-08" is removed from the Drones table
+  // AND a confirmation is shown
+  it('Drone is deleted from the Drones page', () => {
+    flushDrones([
+      { id: 1, name: 'TELLO-07', description: '', status: 'Available' },
+      { id: 2, name: 'TELLO-08', description: '', status: 'Available' }
+    ]);
+
+    deleteButton('TELLO-08').click();
+    fixture.detectChanges();
+
+    const request = httpMock.expectOne(`${url}/2`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    fixture.detectChanges();
+
+    expect(rowsText().map((row) => row[0])).toEqual(['TELLO-07']);
+    const confirmation = element('[role="status"]')!;
+    expect(confirmation.textContent?.trim()).toBe('Drone "TELLO-08" deleted.');
+    expect(confirmation.classList).toContain('alert--success');
+  });
+
+  // GIVEN the Drone "TELLO-07" has at least one Loan
+  // WHEN the user presses "Delete" in the row of "TELLO-07"
+  // THEN the backend error message is shown in an error alert
+  // AND the row of "TELLO-07" is still in the Drones table
+  it('Rejected delete keeps the row', () => {
+    flushDrones([{ id: 1, name: 'TELLO-07', description: '', status: 'Loaned' }]);
+
+    deleteButton('TELLO-07').click();
+    fixture.detectChanges();
+
+    httpMock.expectOne(`${url}/1`).flush(
+      {
+        title: 'Conflict',
+        detail: 'Drone "TELLO-07" cannot be deleted because it has Loans.',
+        status: 409
+      },
+      { status: 409, statusText: 'Conflict' }
+    );
+    fixture.detectChanges();
+
+    const alert = element('[role="alert"]')!;
+    expect(alert.textContent?.trim()).toBe('Drone "TELLO-07" cannot be deleted because it has Loans.');
+    expect(alert.classList).toContain('alert--error');
+    expect(rowsText().map((row) => row[0])).toEqual(['TELLO-07']);
+  });
+
+  // WHEN the Drones page lists "TELLO-07"
+  // THEN the Delete button of that row has the accessible name "Delete Drone TELLO-07"
+  it('Delete button names its row', () => {
+    flushDrones([{ id: 1, name: 'TELLO-07', description: '', status: 'Available' }]);
+
+    const button = deleteButton('TELLO-07');
+    expect(button.getAttribute('aria-label')).toBe('Delete Drone TELLO-07');
+    expect(button.textContent?.trim()).toBe('Delete');
+  });
+
+  // GIVEN the user pressed "Delete" in the row of "TELLO-08"
+  // WHEN the request has not finished yet
+  // THEN the Delete button of that row is disabled
+  it('Button is disabled while deleting', () => {
+    flushDrones([
+      { id: 1, name: 'TELLO-07', description: '', status: 'Available' },
+      { id: 2, name: 'TELLO-08', description: '', status: 'Available' }
+    ]);
+    const button = deleteButton('TELLO-08');
+    expect(button.disabled).toBe(false);
+
+    button.click();
+    fixture.detectChanges();
+    expect(deleteButton('TELLO-08').disabled).toBe(true);
+    expect(deleteButton('TELLO-07').disabled).toBe(false);
+
+    httpMock.expectOne(`${url}/2`).flush(null, { status: 204, statusText: 'No Content' });
+    fixture.detectChanges();
+    expect(rowsText().map((row) => row[0])).toEqual(['TELLO-07']);
   });
 });

@@ -53,6 +53,14 @@ import { StatusBadge } from '../../components/status-badge/status-badge';
     <section class="card" aria-labelledby="drone-list-heading">
       <h2 id="drone-list-heading">All Drones</h2>
 
+      @if (deleteErrorMessage(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
+
+      @if (deleteSuccessMessage(); as message) {
+        <p class="alert alert--success" role="status">{{ message }}</p>
+      }
+
       <div class="table-wrap">
         <table class="drone-list">
           <thead>
@@ -60,6 +68,7 @@ import { StatusBadge } from '../../components/status-badge/status-badge';
               <th scope="col">Name</th>
               <th scope="col">Status</th>
               <th scope="col">Description</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -68,10 +77,21 @@ import { StatusBadge } from '../../components/status-badge/status-badge';
                 <td class="name">{{ drone.name }}</td>
                 <td><app-status-badge [status]="drone.status" /></td>
                 <td>{{ drone.description }}</td>
+                <td class="actions">
+                  <button
+                    type="button"
+                    class="button--secondary"
+                    [attr.aria-label]="'Delete Drone ' + drone.name"
+                    [disabled]="deletingId() === drone.id"
+                    (click)="deleteDrone(drone)"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             } @empty {
               <tr>
-                <td class="empty" colspan="3">No drones yet.</td>
+                <td class="empty" colspan="4">No drones yet.</td>
               </tr>
             }
           </tbody>
@@ -113,6 +133,30 @@ import { StatusBadge } from '../../components/status-badge/status-badge';
       font-weight: 600;
     }
 
+    .actions {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .button--secondary {
+      border-color: var(--primary);
+      background: var(--surface);
+      color: var(--primary);
+    }
+
+    .button--secondary:hover:not(:disabled) {
+      background: var(--bg);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
     .empty {
       padding: var(--space-4) var(--space-3);
       text-align: center;
@@ -129,6 +173,9 @@ export class DronesPage implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   readonly saving = signal(false);
+  readonly deletingId = signal<number | null>(null);
+  readonly deleteErrorMessage = signal<string | null>(null);
+  readonly deleteSuccessMessage = signal<string | null>(null);
 
   ngOnInit(): void {
     this.droneService.getAll().subscribe({
@@ -156,5 +203,31 @@ export class DronesPage implements OnInit {
         this.saving.set(false);
       }
     });
+  }
+
+  deleteDrone(drone: Drone): void {
+    // Clear the previous result before the new one is shown (UI-004).
+    this.clearMessages();
+    this.deletingId.set(drone.id);
+
+    this.droneService.delete(drone.id).subscribe({
+      next: () => {
+        this.drones.update((drones) => drones.filter((d) => d.id !== drone.id));
+        this.deleteSuccessMessage.set(`Drone "${drone.name}" deleted.`);
+        this.deletingId.set(null);
+      },
+      error: (error: unknown) => {
+        // Only the backend decides whether a Drone can be deleted (design D1).
+        this.deleteErrorMessage.set(problemDetailsMessage(error));
+        this.deletingId.set(null);
+      }
+    });
+  }
+
+  private clearMessages(): void {
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    this.deleteErrorMessage.set(null);
+    this.deleteSuccessMessage.set(null);
   }
 }
