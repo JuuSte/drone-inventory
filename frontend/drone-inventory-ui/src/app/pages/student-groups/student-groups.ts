@@ -43,21 +43,41 @@ import { StudentGroupService } from '../../services/student-group.service';
     <section class="card" aria-labelledby="group-list-heading">
       <h2 id="group-list-heading">All StudentGroups</h2>
 
+      @if (deleteErrorMessage(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
+
+      @if (deleteSuccessMessage(); as message) {
+        <p class="alert alert--success" role="status">{{ message }}</p>
+      }
+
       <div class="table-wrap">
         <table class="student-group-list">
           <thead>
             <tr>
               <th scope="col">Name</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
             </tr>
           </thead>
           <tbody>
             @for (group of studentGroups(); track group.id) {
               <tr>
                 <td class="name">{{ group.name }}</td>
+                <td class="actions">
+                  <button
+                    type="button"
+                    class="button--secondary"
+                    [attr.aria-label]="'Delete StudentGroup ' + group.name"
+                    [disabled]="deletingId() === group.id"
+                    (click)="deleteGroup(group)"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             } @empty {
               <tr>
-                <td class="empty">No student groups yet.</td>
+                <td class="empty" colspan="2">No student groups yet.</td>
               </tr>
             }
           </tbody>
@@ -91,6 +111,30 @@ import { StudentGroupService } from '../../services/student-group.service';
       font-weight: 600;
     }
 
+    .actions {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .button--secondary {
+      border-color: var(--primary);
+      background: var(--surface);
+      color: var(--primary);
+    }
+
+    .button--secondary:hover:not(:disabled) {
+      background: var(--bg);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
     .empty {
       padding: var(--space-4) var(--space-3);
       text-align: center;
@@ -106,6 +150,9 @@ export class StudentGroupsPage implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   readonly saving = signal(false);
+  readonly deletingId = signal<number | null>(null);
+  readonly deleteErrorMessage = signal<string | null>(null);
+  readonly deleteSuccessMessage = signal<string | null>(null);
 
   ngOnInit(): void {
     this.studentGroupService.getAll().subscribe({
@@ -132,5 +179,31 @@ export class StudentGroupsPage implements OnInit {
         this.saving.set(false);
       }
     });
+  }
+
+  deleteGroup(group: StudentGroup): void {
+    // Clear the previous result before the new one is shown (UI-004).
+    this.clearMessages();
+    this.deletingId.set(group.id);
+
+    this.studentGroupService.delete(group.id).subscribe({
+      next: () => {
+        this.studentGroups.update((groups) => groups.filter((g) => g.id !== group.id));
+        this.deleteSuccessMessage.set(`StudentGroup "${group.name}" deleted.`);
+        this.deletingId.set(null);
+      },
+      error: (error: unknown) => {
+        // Only the backend decides whether a StudentGroup can be deleted (design D1).
+        this.deleteErrorMessage.set(problemDetailsMessage(error));
+        this.deletingId.set(null);
+      }
+    });
+  }
+
+  private clearMessages(): void {
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    this.deleteErrorMessage.set(null);
+    this.deleteSuccessMessage.set(null);
   }
 }

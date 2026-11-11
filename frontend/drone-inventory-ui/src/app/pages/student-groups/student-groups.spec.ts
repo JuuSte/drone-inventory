@@ -176,4 +176,70 @@ describe('StudentGroupsPage', () => {
     expect(element('[role="status"]')?.textContent?.trim()).toBe('StudentGroup "Group 3" created.');
     expect(element('[role="alert"]')).toBeNull();
   });
+
+  // web-ui scenarios (UI-008)
+
+  function deleteButton(name: string): HTMLButtonElement {
+    return element<HTMLButtonElement>(`button[aria-label="Delete StudentGroup ${name}"]`)!;
+  }
+
+  function flushGroups(groups: StudentGroup[]): void {
+    httpMock.expectOne(url).flush(groups);
+    fixture.detectChanges();
+  }
+
+  // GIVEN the StudentGroup "Group 5" has no Loans
+  // WHEN the user presses "Delete" in the row of "Group 5"
+  // THEN the row of "Group 5" is removed from the StudentGroups table
+  // AND a confirmation is shown
+  it('StudentGroup is deleted from the Student Groups page', () => {
+    flushGroups([
+      { id: 1, name: 'Group 3' },
+      { id: 2, name: 'Group 5' }
+    ]);
+
+    const button = deleteButton('Group 5');
+    expect(button.disabled).toBe(false);
+    button.click();
+    fixture.detectChanges();
+    expect(deleteButton('Group 5').disabled).toBe(true);
+
+    const request = httpMock.expectOne(`${url}/2`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    fixture.detectChanges();
+
+    expect(names()).toEqual(['Group 3']);
+    const confirmation = element('[role="status"]')!;
+    expect(confirmation.textContent?.trim()).toBe('StudentGroup "Group 5" deleted.');
+    expect(confirmation.classList).toContain('alert--success');
+  });
+
+  // GIVEN the StudentGroup "Group 3" has at least one Loan
+  // WHEN the user presses "Delete" in the row of "Group 3"
+  // THEN the backend error message is shown in an error alert
+  // AND the row of "Group 3" is still in the StudentGroups table
+  it('Rejected StudentGroup delete keeps the row', () => {
+    flushGroups([{ id: 1, name: 'Group 3' }]);
+
+    deleteButton('Group 3').click();
+    fixture.detectChanges();
+
+    httpMock.expectOne(`${url}/1`).flush(
+      {
+        title: 'Conflict',
+        detail: 'StudentGroup "Group 3" cannot be deleted because it has Loans.',
+        status: 409
+      },
+      { status: 409, statusText: 'Conflict' }
+    );
+    fixture.detectChanges();
+
+    const alert = element('[role="alert"]')!;
+    expect(alert.textContent?.trim()).toBe(
+      'StudentGroup "Group 3" cannot be deleted because it has Loans.'
+    );
+    expect(alert.classList).toContain('alert--error');
+    expect(names()).toEqual(['Group 3']);
+  });
 });
