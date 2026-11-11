@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DroneInventory.Api.Tests/DroneInventory.Api.Tests.csproj" />
+  <Project Path="DroneInventory.Api/DroneInventory.Api.csproj" />
+</Solution>
