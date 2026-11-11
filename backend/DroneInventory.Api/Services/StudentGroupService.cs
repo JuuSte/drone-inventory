@@ -45,6 +45,34 @@ public class StudentGroupService(AppDbContext context) : IStudentGroupService
             .Select(g => new StudentGroupDto(g.Id, g.Name))
             .ToListAsync(cancellationToken);
 
+    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var group = await context.StudentGroups.FindAsync([id], cancellationToken)
+            ?? throw new NotFoundException($"StudentGroup with Id {id} was not found.");
+
+        // Any Loan counts, active or returned: a returned Loan is loan history (REQ-010, design D1).
+        if (await context.Loans.AnyAsync(l => l.StudentGroupId == id, cancellationToken))
+        {
+            throw HasLoans(group.Name);
+        }
+
+        context.StudentGroups.Remove(group);
+
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // A concurrent request created a Loan between the check and the delete; the Restrict
+            // foreign key makes the database refuse the delete (design D2).
+            throw HasLoans(group.Name);
+        }
+    }
+
     private static ConflictException DuplicateName(string name) =>
         new($"A StudentGroup named \"{name}\" already exists.");
+
+    private static ConflictException HasLoans(string name) =>
+        new($"StudentGroup \"{name}\" cannot be deleted because it has Loans.");
 }

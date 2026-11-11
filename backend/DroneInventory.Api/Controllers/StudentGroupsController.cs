@@ -22,4 +22,14 @@ public class StudentGroupsController(IStudentGroupService studentGroupService) :
         var group = await studentGroupService.CreateAsync(request, cancellationToken);
         return Created($"/api/student-groups/{group.Id}", group);
     }
+
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        await studentGroupService.DeleteAsync(id, cancellationToken);
+        return NoContent();
+    }
 }

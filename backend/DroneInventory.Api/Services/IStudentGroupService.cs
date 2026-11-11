@@ -9,4 +9,10 @@ public interface IStudentGroupService
 
     /// <summary>Lists all StudentGroups ordered by Name.</summary>
     Task<IReadOnlyList<StudentGroupDto>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a StudentGroup that has no Loans (REQ-012). Throws NotFoundException for an unknown Id and
+    /// ConflictException if any Loan, active or returned, references the StudentGroup, so loan history is never lost.
+    /// </summary>
+    Task DeleteAsync(int id, CancellationToken cancellationToken = default);
 }
