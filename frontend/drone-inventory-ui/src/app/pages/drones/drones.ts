@@ -3,133 +3,120 @@ import { FormsModule } from '@angular/forms';
 import { problemDetailsMessage } from '../../core/problem-details';
 import { Drone } from '../../models/drone.model';
 import { DroneService } from '../../services/drone.service';
+import { StatusBadge } from '../../components/status-badge/status-badge';
 
 @Component({
   selector: 'app-drones-page',
-  imports: [FormsModule],
+  imports: [FormsModule, StatusBadge],
   template: `
     <h1>Drones</h1>
 
-    <form class="create-form" (ngSubmit)="create()">
-      <label>
-        Name
-        <input name="name" [ngModel]="name()" (ngModelChange)="name.set($event)" />
-      </label>
-      <label>
-        Description
-        <textarea
-          name="description"
-          rows="2"
-          [ngModel]="description()"
-          (ngModelChange)="description.set($event)"
-        ></textarea>
-      </label>
-      <button type="submit" [disabled]="saving()">Create drone</button>
-    </form>
+    <section class="card" aria-labelledby="create-drone-heading">
+      <h2 id="create-drone-heading">Create Drone</h2>
 
-    @if (errorMessage(); as message) {
-      <p class="error" role="alert">{{ message }}</p>
-    }
+      @if (errorMessage(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
 
-    <table class="drone-list">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Status</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (drone of drones(); track drone.id) {
-          <tr>
-            <td>{{ drone.name }}</td>
-            <td>
-              <span class="status" [class.loaned]="drone.status === 'Loaned'">{{ drone.status }}</span>
-            </td>
-            <td>{{ drone.description }}</td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="3">No drones yet.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+      @if (successMessage(); as message) {
+        <p class="alert alert--success" role="status">{{ message }}</p>
+      }
+
+      <!-- novalidate: validation stays in the backend, its message is shown above (design D5). -->
+      <form class="create-form" novalidate (ngSubmit)="create()">
+        <label class="form-field">
+          <span>Name <span class="required-marker" aria-hidden="true">*</span></span>
+          <input
+            name="name"
+            required
+            autocomplete="off"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+          />
+        </label>
+        <label class="form-field description-field">
+          <span>Description</span>
+          <textarea
+            name="description"
+            rows="2"
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+          ></textarea>
+        </label>
+        <button type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Create Drone' }}
+        </button>
+      </form>
+      <p class="hint"><span aria-hidden="true">*</span> Required field</p>
+    </section>
+
+    <section class="card" aria-labelledby="drone-list-heading">
+      <h2 id="drone-list-heading">All Drones</h2>
+
+      <div class="table-wrap">
+        <table class="drone-list">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Status</th>
+              <th scope="col">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (drone of drones(); track drone.id) {
+              <tr>
+                <td class="name">{{ drone.name }}</td>
+                <td><app-status-badge [status]="drone.status" /></td>
+                <td>{{ drone.description }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="empty" colspan="3">No drones yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   `,
   styles: `
     .create-form {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-end;
-      gap: 1rem;
-      margin-bottom: 1rem;
+      gap: var(--space-3);
     }
 
-    .create-form label {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      font-size: 0.875rem;
-      color: #47506a;
+    .create-form .form-field {
+      flex: 1 1 200px;
     }
 
-    input,
+    .create-form .description-field {
+      flex-grow: 2;
+    }
+
     textarea {
-      padding: 0.375rem 0.5rem;
-      border: 1px solid #dfe3ea;
-      border-radius: 0.375rem;
-      font: inherit;
-      color: #1f2430;
+      resize: vertical;
     }
 
-    button {
-      padding: 0.5rem 1rem;
-      border: 0;
-      border-radius: 0.375rem;
-      background: #2f6feb;
-      color: #fff;
-      font: inherit;
-      cursor: pointer;
+    .required-marker {
+      color: var(--danger);
     }
 
-    button:disabled {
-      background: #9db6e8;
-      cursor: default;
-    }
-
-    .error {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #e5a3a3;
-      border-radius: 0.375rem;
-      background: #fdf1f1;
-      color: #a12a2a;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid #dfe3ea;
-      text-align: left;
-    }
-
-    th {
+    .hint {
+      margin: var(--space-2) 0 0;
       font-size: 0.8125rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #6b7488;
+      color: var(--text-muted);
     }
 
-    .status {
-      color: #2f7d4f;
+    .name {
+      font-weight: 600;
     }
 
-    .status.loaned {
-      color: #a12a2a;
+    .empty {
+      padding: var(--space-4) var(--space-3);
+      text-align: center;
+      color: var(--text-muted);
     }
   `
 })
@@ -140,6 +127,7 @@ export class DronesPage implements OnInit {
   readonly name = signal('');
   readonly description = signal('');
   readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal<string | null>(null);
   readonly saving = signal(false);
 
   ngOnInit(): void {
@@ -150,12 +138,15 @@ export class DronesPage implements OnInit {
   }
 
   create(): void {
+    // Clear the previous result before the new one is shown (UI-004).
     this.errorMessage.set(null);
+    this.successMessage.set(null);
     this.saving.set(true);
 
     this.droneService.create({ name: this.name(), description: this.description() }).subscribe({
       next: (drone) => {
         this.drones.update((drones) => [...drones, drone]);
+        this.successMessage.set(`Drone "${drone.name}" created.`);
         this.name.set('');
         this.description.set('');
         this.saving.set(false);
