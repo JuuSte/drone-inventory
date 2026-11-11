@@ -86,8 +86,8 @@ describe('LoansPage', () => {
   it('should offer only available drones and the existing StudentGroups', () => {
     load(available, groups);
 
-    expect(options('select[name="droneId"]')).toEqual(['Select a drone', 'TELLO-07']);
-    expect(options('select[name="studentGroupId"]')).toEqual(['Select a group', 'Group 3']);
+    expect(options('select[name="droneId"]')).toEqual(['Select a Drone', 'TELLO-07']);
+    expect(options('select[name="studentGroupId"]')).toEqual(['Select a StudentGroup', 'Group 3']);
   });
 
   it('should loan TELLO-07 to Group 3 with 4 batteries and 8 propellers', async () => {
@@ -138,10 +138,10 @@ describe('LoansPage', () => {
     expect(element('[role="alert"]').textContent?.trim()).toBe('TELLO-07 is already loaned.');
   });
 
-  it('should list an active Loan as Group 3 | TELLO-07 | 4 | 8 | 19.08.2026', () => {
+  it('should list an active Loan as Group 3 | TELLO-07 | 4 | 8 | 19.08.2026 | Active', () => {
     load(available, groups, [activeLoan]);
 
-    expect(rows()).toEqual([['Group 3', 'TELLO-07', '4', '8', '19.08.2026', 'Return']]);
+    expect(rows()).toEqual([['Group 3', 'TELLO-07', '4', '8', '19.08.2026', 'Active', 'Return Loan']]);
   });
 
   it('should return a Loan, remove the row and offer the Drone again', () => {
@@ -165,7 +165,7 @@ describe('LoansPage', () => {
       ]);
     fixture.detectChanges();
 
-    expect(options('select[name="droneId"]')).toEqual(['Select a drone', 'TELLO-07']);
+    expect(options('select[name="droneId"]')).toEqual(['Select a Drone', 'TELLO-07']);
   });
 
   it('should show the backend error when a Loan is already returned and keep the row', () => {
@@ -181,6 +181,103 @@ describe('LoansPage', () => {
     fixture.detectChanges();
 
     expect(element('[role="alert"]').textContent?.trim()).toBe('The Loan is already returned.');
-    expect(rows()).toEqual([['Group 3', 'TELLO-07', '4', '8', '19.08.2026', 'Return']]);
+    expect(rows()).toEqual([['Group 3', 'TELLO-07', '4', '8', '19.08.2026', 'Active', 'Return Loan']]);
+  });
+
+  // web-ui scenarios (UI-002, UI-003, UI-004, UI-005, UI-006)
+
+  // GIVEN "TELLO-07" was loaned to "Group 3" on 19.08.2026 with 4 batteries and 8 propellers
+  // WHEN the Loans page is shown
+  // THEN the row shows "Group 3", "TELLO-07", 4, 8 and "19.08.2026"
+  // AND the quantities 4 and 8 are right-aligned
+  it('Active Loan row is readable', () => {
+    load(available, groups, [activeLoan]);
+
+    const cells = Array.from(element('.loan-list tbody tr').querySelectorAll('td'));
+    expect(cells.slice(0, 5).map((c) => c.textContent?.trim())).toEqual([
+      'Group 3',
+      'TELLO-07',
+      '4',
+      '8',
+      '19.08.2026'
+    ]);
+    expect(cells[2].classList).toContain('num');
+    expect(cells[3].classList).toContain('num');
+    const headers = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.loan-list th'));
+    expect(headers[2].classList).toContain('num');
+    expect(headers[3].classList).toContain('num');
+    expect(element('.loan-list').closest('.table-wrap')).not.toBeNull();
+  });
+
+  // GIVEN an active Loan exists
+  // WHEN the Loans page is shown
+  // THEN the active Loan shows the badge "Active"
+  it('Loan status badges (Active)', () => {
+    load(available, groups, [activeLoan]);
+
+    const badge = element('.loan-list tbody .badge');
+    expect(badge.textContent?.trim()).toBe('Active');
+    expect(badge.classList).toContain('badge--warning');
+  });
+
+  // GIVEN "TELLO-07" is loaned to "Group 3"
+  // WHEN the user returns the Loan
+  // THEN a confirmation is shown and the Loan is no longer in the active Loans table
+  it('Confirmation after a Loan is returned', () => {
+    load(available, groups, [activeLoan]);
+
+    const button = element('.loan-list tbody button') as HTMLButtonElement;
+    expect(button.textContent?.trim()).toBe('Return Loan');
+    expect(button.getAttribute('aria-label')).toBe('Return Loan of TELLO-07');
+    button.click();
+    fixture.detectChanges();
+    expect(button.disabled).toBe(true);
+
+    httpMock.expectOne(`${loansUrl}/1/return`).flush(activeLoan);
+    fixture.detectChanges();
+    httpMock.expectOne(dronesUrl).flush(available);
+    fixture.detectChanges();
+
+    expect(element('[role="status"]').textContent?.trim()).toBe('Loan of TELLO-07 to Group 3 returned.');
+    expect(rows()).toEqual([['No active loans.']]);
+  });
+
+  // WHEN the Loans page with its form is shown
+  // THEN every input and select has an associated label
+  it('Every input has a label', () => {
+    load(available, groups);
+
+    const fields = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+        'input, select'
+      )
+    );
+    expect(fields.length).toBe(4);
+    for (const field of fields) {
+      expect(field.labels?.length).toBe(1);
+    }
+    expect(
+      fields.map((f) => f.labels?.[0].firstElementChild?.textContent?.replace('*', '').trim())
+    ).toEqual(['Drone', 'StudentGroup', 'Batteries', 'Propellers']);
+  });
+
+  // The backend error of the Loan form is shown above that form (UI-004).
+  it('Backend error is shown above the Loan form', () => {
+    load(available, groups);
+
+    select('select[name="droneId"]', 1);
+    select('select[name="studentGroupId"]', 1);
+    submit();
+    httpMock
+      .expectOne(loansUrl)
+      .flush(
+        { title: 'Conflict', detail: 'TELLO-07 is already loaned.', status: 409 },
+        { status: 409, statusText: 'Conflict' }
+      );
+    fixture.detectChanges();
+
+    const alert = element('[role="alert"]');
+    expect(alert.classList).toContain('alert--error');
+    expect(alert.compareDocumentPosition(element('.loan-form')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

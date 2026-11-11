@@ -8,180 +8,205 @@ import { StudentGroup } from '../../models/student-group.model';
 import { DroneService } from '../../services/drone.service';
 import { LoanService } from '../../services/loan.service';
 import { StudentGroupService } from '../../services/student-group.service';
+import { StatusBadge } from '../../components/status-badge/status-badge';
 
 @Component({
   selector: 'app-loans-page',
-  imports: [FormsModule],
+  imports: [FormsModule, StatusBadge],
   template: `
     <h1>Loans</h1>
 
-    <h2>Loan a drone</h2>
+    <section class="card" aria-labelledby="create-loan-heading">
+      <h2 id="create-loan-heading">Create Loan</h2>
 
-    <form class="loan-form" (ngSubmit)="create()">
-      <label>
-        Drone
-        <select name="droneId" [ngModel]="droneId()" (ngModelChange)="droneId.set($event)">
-          <option [ngValue]="null">Select a drone</option>
-          @for (drone of availableDrones(); track drone.id) {
-            <option [ngValue]="drone.id">{{ drone.name }}</option>
-          }
-        </select>
-      </label>
-      <label>
-        Student group
-        <select
-          name="studentGroupId"
-          [ngModel]="studentGroupId()"
-          (ngModelChange)="studentGroupId.set($event)"
-        >
-          <option [ngValue]="null">Select a group</option>
-          @for (group of studentGroups(); track group.id) {
-            <option [ngValue]="group.id">{{ group.name }}</option>
-          }
-        </select>
-      </label>
-      <label>
-        Batteries
-        <input
-          type="number"
-          name="batteries"
-          min="0"
-          [ngModel]="batteries()"
-          (ngModelChange)="batteries.set($event)"
-        />
-      </label>
-      <label>
-        Propellers
-        <input
-          type="number"
-          name="propellers"
-          min="0"
-          [ngModel]="propellers()"
-          (ngModelChange)="propellers.set($event)"
-        />
-      </label>
-      <button type="submit" [disabled]="!droneId() || !studentGroupId() || saving()">Loan</button>
-    </form>
+      @if (errorMessage(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
 
-    @if (errorMessage(); as message) {
-      <p class="error" role="alert">{{ message }}</p>
-    }
+      @if (successMessage(); as message) {
+        <p class="alert alert--success" role="status">{{ message }}</p>
+      }
 
-    @if (successMessage(); as message) {
-      <p class="success" role="status">{{ message }}</p>
-    }
+      <!-- novalidate: validation stays in the backend, its message is shown above (design D5). -->
+      <form class="loan-form" novalidate (ngSubmit)="create()">
+        <label class="form-field">
+          <span>Drone <span class="required-marker" aria-hidden="true">*</span></span>
+          <select
+            name="droneId"
+            required
+            [ngModel]="droneId()"
+            (ngModelChange)="droneId.set($event)"
+          >
+            <option [ngValue]="null">Select a Drone</option>
+            @for (drone of availableDrones(); track drone.id) {
+              <option [ngValue]="drone.id">{{ drone.name }}</option>
+            }
+          </select>
+        </label>
+        <label class="form-field">
+          <span>StudentGroup <span class="required-marker" aria-hidden="true">*</span></span>
+          <select
+            name="studentGroupId"
+            required
+            [ngModel]="studentGroupId()"
+            (ngModelChange)="studentGroupId.set($event)"
+          >
+            <option [ngValue]="null">Select a StudentGroup</option>
+            @for (group of studentGroups(); track group.id) {
+              <option [ngValue]="group.id">{{ group.name }}</option>
+            }
+          </select>
+        </label>
+        <label class="form-field quantity-field">
+          <span>Batteries</span>
+          <input
+            type="number"
+            name="batteries"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            [ngModel]="batteries()"
+            (ngModelChange)="batteries.set($event)"
+          />
+        </label>
+        <label class="form-field quantity-field">
+          <span>Propellers</span>
+          <input
+            type="number"
+            name="propellers"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            [ngModel]="propellers()"
+            (ngModelChange)="propellers.set($event)"
+          />
+        </label>
+        <button type="submit" [disabled]="!droneId() || !studentGroupId() || saving()">
+          {{ saving() ? 'Saving…' : 'Create Loan' }}
+        </button>
+      </form>
+      <p class="hint"><span aria-hidden="true">*</span> Required field</p>
+    </section>
 
-    <h2>Active loans</h2>
+    <section class="card" aria-labelledby="active-loans-heading">
+      <h2 id="active-loans-heading">Active Loans</h2>
 
-    <table class="loan-list">
-      <thead>
-        <tr>
-          <th>Group</th>
-          <th>Drone</th>
-          <th>Batteries</th>
-          <th>Propellers</th>
-          <th>LoanDate</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (loan of activeLoans(); track loan.id) {
-          <tr>
-            <td>{{ loan.studentGroupName }}</td>
-            <td>{{ loan.droneName }}</td>
-            <td>{{ loan.batteries }}</td>
-            <td>{{ loan.propellers }}</td>
-            <td>{{ formatDate(loan.loanDate) }}</td>
-            <td>
-              <button type="button" (click)="returnLoan(loan.id)">Return</button>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="6">No active loans.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+      @if (returnErrorMessage(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
+
+      @if (returnSuccessMessage(); as message) {
+        <p class="alert alert--success" role="status">{{ message }}</p>
+      }
+
+      <div class="table-wrap">
+        <table class="loan-list">
+          <thead>
+            <tr>
+              <th scope="col">StudentGroup</th>
+              <th scope="col">Drone</th>
+              <th scope="col" class="num">Batteries</th>
+              <th scope="col" class="num">Propellers</th>
+              <th scope="col">LoanDate</th>
+              <th scope="col">Status</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (loan of activeLoans(); track loan.id) {
+              <tr>
+                <td>{{ loan.studentGroupName }}</td>
+                <td class="name">{{ loan.droneName }}</td>
+                <td class="num">{{ loan.batteries }}</td>
+                <td class="num">{{ loan.propellers }}</td>
+                <td class="date">{{ formatDate(loan.loanDate) }}</td>
+                <!-- /api/loans/active only returns Loans with Status Active. -->
+                <td><app-status-badge status="Active" /></td>
+                <td class="actions">
+                  <button
+                    type="button"
+                    class="button--secondary"
+                    [attr.aria-label]="'Return Loan of ' + loan.droneName"
+                    [disabled]="returningId() === loan.id"
+                    (click)="returnLoan(loan.id)"
+                  >
+                    Return Loan
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="empty" colspan="7">No active loans.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   `,
   styles: `
     .loan-form {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-end;
-      gap: 1rem;
-      margin-bottom: 1rem;
+      gap: var(--space-3);
     }
 
-    .loan-form label {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      font-size: 0.875rem;
-      color: #47506a;
+    .loan-form .form-field {
+      flex: 1 1 180px;
     }
 
-    input,
-    select {
-      padding: 0.375rem 0.5rem;
-      border: 1px solid #dfe3ea;
-      border-radius: 0.375rem;
-      font: inherit;
-      color: #1f2430;
+    .loan-form .quantity-field {
+      flex: 0 1 120px;
     }
 
-    button {
-      padding: 0.5rem 1rem;
-      border: 0;
-      border-radius: 0.375rem;
-      background: #2f6feb;
-      color: #fff;
-      font: inherit;
-      cursor: pointer;
+    .required-marker {
+      color: var(--danger);
     }
 
-    button:disabled {
-      background: #9db6e8;
-      cursor: default;
-    }
-
-    .error {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #e5a3a3;
-      border-radius: 0.375rem;
-      background: #fdf1f1;
-      color: #a12a2a;
-    }
-
-    .success {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #a3c7a9;
-      border-radius: 0.375rem;
-      background: #f1fdf3;
-      color: #2f7d4f;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid #dfe3ea;
-      text-align: left;
-    }
-
-    th {
+    .hint {
+      margin: var(--space-2) 0 0;
       font-size: 0.8125rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #6b7488;
+      color: var(--text-muted);
     }
 
-    .loan-list button {
-      padding: 0.25rem 0.75rem;
+    .name {
+      font-weight: 600;
+    }
+
+    .date {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .actions {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .button--secondary {
+      border-color: var(--primary);
+      background: var(--surface);
+      color: var(--primary);
+    }
+
+    .button--secondary:hover:not(:disabled) {
+      background: var(--bg);
+    }
+
+    .empty {
+      padding: var(--space-4) var(--space-3);
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
   `
 })
@@ -204,6 +229,9 @@ export class LoansPage implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   readonly saving = signal(false);
+  readonly returnErrorMessage = signal<string | null>(null);
+  readonly returnSuccessMessage = signal<string | null>(null);
+  readonly returningId = signal<number | null>(null);
   readonly formatDate = formatDate;
 
   ngOnInit(): void {
@@ -222,8 +250,8 @@ export class LoansPage implements OnInit {
       return;
     }
 
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
+    // Clear the previous result before the new one is shown (UI-004).
+    this.clearMessages();
     this.saving.set(true);
 
     this.loanService
@@ -249,16 +277,31 @@ export class LoansPage implements OnInit {
   }
 
   returnLoan(id: number): void {
-    this.errorMessage.set(null);
-    this.successMessage.set(null);
+    const loan = this.activeLoans().find((l) => l.id === id);
+    this.clearMessages();
+    this.returningId.set(id);
 
     this.loanService.returnLoan(id).subscribe({
       next: () => {
-        this.activeLoans.update((loans) => loans.filter((loan) => loan.id !== id));
+        this.activeLoans.update((loans) => loans.filter((l) => l.id !== id));
+        this.returnSuccessMessage.set(
+          loan ? `Loan of ${loan.droneName} to ${loan.studentGroupName} returned.` : 'Loan returned.'
+        );
+        this.returningId.set(null);
         this.reloadDrones();
       },
-      error: (error: unknown) => this.errorMessage.set(problemDetailsMessage(error))
+      error: (error: unknown) => {
+        this.returnErrorMessage.set(problemDetailsMessage(error));
+        this.returningId.set(null);
+      }
     });
+  }
+
+  private clearMessages(): void {
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    this.returnErrorMessage.set(null);
+    this.returnSuccessMessage.set(null);
   }
 
   private reloadDrones(): void {
