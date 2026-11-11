@@ -84,6 +84,30 @@ Returned loans SHALL be kept and displayed as loan history.
 - THEN the loan is shown with loan date, return date and accessories
 - AND the loan is never deleted
 
+## REQ-011 Delete Drone
+A drone SHALL only be deleted if it has no Loans (active or returned).
+- GIVEN the drone "TELLO-08" has no Loans
+- WHEN "TELLO-08" is deleted
+- THEN the drone is removed and no longer listed
+
+Scenario: Drone with loan history
+- GIVEN the drone "TELLO-07" has at least one Loan
+- WHEN "TELLO-07" is deleted
+- THEN the request is rejected
+- AND the drone and its Loans remain stored
+
+## REQ-012 Delete Student Group
+A student group SHALL only be deleted if it has no Loans (active or returned).
+- GIVEN the student group "Group 5" has no Loans
+- WHEN "Group 5" is deleted
+- THEN the student group is removed and no longer listed
+
+Scenario: Student group with loan history
+- GIVEN the student group "Group 3" has at least one Loan
+- WHEN "Group 3" is deleted
+- THEN the request is rejected
+- AND the student group and its Loans remain stored
+
 ## Out of Scope
 - Login, user accounts, roles
 - Individual battery inventory (BAT-001 ...)
