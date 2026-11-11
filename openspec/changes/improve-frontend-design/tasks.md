@@ -17,7 +17,7 @@ This change is frontend-only (backend and API unchanged, see design D6). The Giv
 
 ## 3. Integration
 
-- [ ] 3.1 With API and UI running, check every page at 1280px and 375px in the browser: no horizontal page scroll, wrapping navigation, scrollable tables, visible focus, contrast ≥ 4.5:1, and scenario "Loan is created with the keyboard only" (Tab/Enter only); verify `ng build` and `ng test --watch=false` pass and note the results in the PR (#55)
+- [x] 3.1 With API and UI running, check every page at 1280px and 375px in the browser: no horizontal page scroll, wrapping navigation, scrollable tables, visible focus, contrast ≥ 4.5:1, and scenario "Loan is created with the keyboard only" (Tab/Enter only); verify `ng build` and `ng test --watch=false` pass and note the results in the PR (#55)
 
 ## Workflow follow-up
 
