@@ -8,8 +8,8 @@ namespace DroneInventory.Api.Tests.Http;
 
 /// <summary>
 /// API error mapping (design D3, D4): checks through real HTTP requests that the services'
-/// results and domain exceptions are translated to 201, 400, 404 and 409 with ProblemDetails.
-/// One endpoint per status code.
+/// results and domain exceptions are translated to 201, 204, 400, 404 and 409 with ProblemDetails.
+/// One endpoint per status code, plus DELETE /api/drones/{id} with 204, 404 and 409 (REQ-011).
 /// </summary>
 public sealed class HttpStatusMappingTests : IDisposable
 {
@@ -81,5 +81,57 @@ public sealed class HttpStatusMappingTests : IDisposable
         var response = await PostDroneAsync("TELLO-07");
 
         await ReadProblemAsync(response, HttpStatusCode.Conflict);
+    }
+
+    private async Task<DroneDto> CreateDroneAsync(string name)
+    {
+        var response = await PostDroneAsync(name);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<DroneDto>())!;
+    }
+
+    private async Task<IReadOnlyList<DroneDto>> GetDronesAsync() =>
+        (await _client.GetFromJsonAsync<IReadOnlyList<DroneDto>>("/api/drones"))!;
+
+    // DELETE /api/drones/{id} for a Drone without Loans -> 204 No Content, the Drone is no longer listed (REQ-011).
+    [Fact]
+    public async Task Delete_of_drone_without_loans_returns_204()
+    {
+        var drone = await CreateDroneAsync("TELLO-08");
+
+        var response = await _client.DeleteAsync($"/api/drones/{drone.Id}");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsByteArrayAsync());
+        Assert.Empty(await GetDronesAsync());
+    }
+
+    // DELETE /api/drones/{id} for an unknown Id -> NotFoundException -> 404 ProblemDetails.
+    [Fact]
+    public async Task Delete_of_unknown_drone_returns_404()
+    {
+        var response = await _client.DeleteAsync("/api/drones/999");
+
+        var problem = await ReadProblemAsync(response, HttpStatusCode.NotFound);
+        Assert.Equal("Drone with Id 999 was not found.", problem.Detail);
+    }
+
+    // DELETE /api/drones/{id} for a Drone with a Loan -> ConflictException -> 409 ProblemDetails,
+    // the Drone stays listed as "Loaned" (REQ-011).
+    [Fact]
+    public async Task Delete_of_drone_with_a_loan_returns_409()
+    {
+        var drone = await CreateDroneAsync("TELLO-07");
+        var groupResponse = await _client.PostAsJsonAsync("/api/student-groups", new CreateStudentGroupRequest("Group 3"));
+        var group = (await groupResponse.Content.ReadFromJsonAsync<StudentGroupDto>())!;
+        var loanResponse = await _client.PostAsJsonAsync("/api/loans", new CreateLoanRequest(drone.Id, group.Id, 4, 8));
+        Assert.Equal(HttpStatusCode.Created, loanResponse.StatusCode);
+
+        var response = await _client.DeleteAsync($"/api/drones/{drone.Id}");
+
+        var problem = await ReadProblemAsync(response, HttpStatusCode.Conflict);
+        Assert.Equal("Drone \"TELLO-07\" cannot be deleted because it has Loans.", problem.Detail);
+        var stored = Assert.Single(await GetDronesAsync());
+        Assert.Equal(DroneStatus.Loaned, stored.Status);
     }
 }

@@ -6,7 +6,7 @@ The backend scenarios (REQ-011, REQ-012) get xUnit tests. The `web-ui` scenarios
 
 - [x] 1.1 Implement `DroneService.DeleteAsync` (404 for an unknown Id, 409 if any Loan references the Drone, `DbUpdateException` mapped to 409) and `DELETE /api/drones/{id:int}` returning 204 (design D1-D3), with xUnit tests for scenarios "Drone without Loans is deleted", "Drone with loan history", "Drone with an active Loan" and "Unknown Drone"; verify `dotnet test` passes (#69)
 - [x] 1.2 Implement `StudentGroupService.DeleteAsync` and `DELETE /api/student-groups/{id:int}` the same way (design D1-D3), with xUnit tests for scenarios "StudentGroup without Loans is deleted", "StudentGroup with loan history", "StudentGroup with an active Loan" and "Unknown StudentGroup", and an `AppDbContextTests` case "StudentGroup_with_Loans_cannot_be_deleted" (design D5); verify `dotnet test` passes (#70)
-- [ ] 1.3 Add HTTP tests to `HttpStatusMappingTests` for `DELETE /api/drones/{id}`: 204 for a Drone without Loans, 404 for an unknown Id, and 409 with a ProblemDetails `detail` for a Drone with a Loan (design D3); verify `dotnet test` passes (#71)
+- [x] 1.3 Add HTTP tests to `HttpStatusMappingTests` for `DELETE /api/drones/{id}`: 204 for a Drone without Loans, 404 for an unknown Id, and 409 with a ProblemDetails `detail` for a Drone with a Loan (design D3); verify `dotnet test` passes (#71)
 
 ## 2. Frontend: Delete buttons
 
