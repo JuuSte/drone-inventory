@@ -44,7 +44,7 @@
 
 ## 8. Integration
 
-- [ ] 8.1 Run the full flow end to end (create Drone and StudentGroup, loan, list, return, history) against a fresh database with API and UI running; verify all `dotnet test` and `ng test` suites pass and document start commands in the root README (#22)
+- [x] 8.1 Run the full flow end to end (create Drone and StudentGroup, loan, list, return, history) against a fresh database with API and UI running; verify all `dotnet test` and `ng test` suites pass and document start commands in the root README (#22)
 
 ## Workflow follow-up
 
