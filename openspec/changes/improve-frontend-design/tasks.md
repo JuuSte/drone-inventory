@@ -11,7 +11,7 @@ This change is frontend-only (backend and API unchanged, see design D6). The Giv
 ## 2. Frontend: pages
 
 - [x] 2.1 Restyle the `/drones` page: cards, alert above the form, required Name marker, `novalidate`, status badge, empty state, remove duplicated inline CSS (design D3, D5), with Vitest tests for scenarios "Available and Loaned Drones have different badges", "Backend error is shown above the form", "Error is cleared on the next submit", "Button is disabled while saving", "Required fields are marked" and "Empty list"; verify the tests pass (#51)
-- [ ] 2.2 Restyle the `/student-groups` page the same way, with Vitest tests that the alert is above the form and every input has a label; verify the tests pass (#52)
+- [x] 2.2 Restyle the `/student-groups` page the same way, with Vitest tests that the alert is above the form and every input has a label; verify the tests pass (#52)
 - [ ] 2.3 Restyle the `/loans` page: form card with labels "Drone" and "StudentGroup", alert above the form, active Loans table in `.table-wrap` with right-aligned quantities, Status badge column and "Return Loan" button, confirmation after return (design D3, D5), with Vitest tests for scenarios "Active Loan row is readable", "Loan status badges" (Active), "Confirmation after a Loan is returned" and "Every input has a label"; update existing row expectations for the new column; verify the tests pass (#53)
 - [ ] 2.4 Restyle the `/history` page: table card in `.table-wrap`, right-aligned quantities, Status badge column, empty state, with Vitest tests for scenarios "Loan status badges" (Returned) and "Every page has a title"; verify the tests pass (#54)
 

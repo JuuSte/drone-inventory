@@ -115,4 +115,65 @@ describe('StudentGroupsPage', () => {
     expect(alert?.textContent?.trim()).toBe('Name is required.');
     expect(names()).toEqual(['No student groups yet.']);
   });
+
+  // web-ui scenarios (UI-004, UI-006)
+
+  function element<T extends Element = HTMLElement>(selector: string): T | null {
+    return (fixture.nativeElement as HTMLElement).querySelector<T>(selector);
+  }
+
+  // GIVEN a StudentGroup named "Group 3" exists
+  // WHEN the user creates another StudentGroup named "Group 3"
+  // THEN the backend error message is shown in an error alert above the create form
+  // AND the StudentGroups table is unchanged
+  it('Backend error is shown above the form', () => {
+    httpMock.expectOne(url).flush([{ id: 1, name: 'Group 3' }] satisfies StudentGroup[]);
+    fixture.detectChanges();
+
+    type('input[name="name"]', 'Group 3');
+    submit();
+    httpMock
+      .expectOne(url)
+      .flush(
+        { title: 'Conflict', detail: 'A StudentGroup named "Group 3" already exists.', status: 409 },
+        { status: 409, statusText: 'Conflict' }
+      );
+    fixture.detectChanges();
+
+    const alert = element('[role="alert"]')!;
+    const form = element('form')!;
+    expect(alert.classList).toContain('alert--error');
+    expect(alert.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(names()).toEqual(['Group 3']);
+  });
+
+  // WHEN the StudentGroups page with its form is shown
+  // THEN every input has an associated label (and Name is marked as required)
+  it('Every input has a label', () => {
+    httpMock.expectOne(url).flush([]);
+
+    const inputs = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('input'));
+    expect(inputs.length).toBe(1);
+    for (const input of inputs) {
+      expect(input.labels?.length).toBe(1);
+    }
+
+    const name = element<HTMLInputElement>('input[name="name"]')!;
+    expect(name.required).toBe(true);
+    expect(name.labels?.[0].querySelector('.required-marker')).not.toBeNull();
+    expect(element<HTMLFormElement>('form')!.noValidate).toBe(true);
+  });
+
+  // Short confirmation after a successful create (UI-005).
+  it('shows a confirmation after a StudentGroup is created', () => {
+    httpMock.expectOne(url).flush([]);
+
+    type('input[name="name"]', 'Group 3');
+    submit();
+    httpMock.expectOne(url).flush({ id: 1, name: 'Group 3' } satisfies StudentGroup);
+    fixture.detectChanges();
+
+    expect(element('[role="status"]')?.textContent?.trim()).toBe('StudentGroup "Group 3" created.');
+    expect(element('[role="alert"]')).toBeNull();
+  });
 });

@@ -10,102 +10,91 @@ import { StudentGroupService } from '../../services/student-group.service';
   template: `
     <h1>Student Groups</h1>
 
-    <form class="create-form" (ngSubmit)="create()">
-      <label>
-        Name
-        <input name="name" [ngModel]="name()" (ngModelChange)="name.set($event)" />
-      </label>
-      <button type="submit" [disabled]="saving()">Create group</button>
-    </form>
+    <section class="card" aria-labelledby="create-group-heading">
+      <h2 id="create-group-heading">Create StudentGroup</h2>
 
-    @if (errorMessage(); as message) {
-      <p class="error" role="alert">{{ message }}</p>
-    }
+      @if (errorMessage(); as message) {
+        <p class="alert alert--error" role="alert">{{ message }}</p>
+      }
 
-    <table class="student-group-list">
-      <thead>
-        <tr>
-          <th>Name</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (group of studentGroups(); track group.id) {
-          <tr>
-            <td>{{ group.name }}</td>
-          </tr>
-        } @empty {
-          <tr>
-            <td>No student groups yet.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
+      @if (successMessage(); as message) {
+        <p class="alert alert--success" role="status">{{ message }}</p>
+      }
+
+      <!-- novalidate: validation stays in the backend, its message is shown above (design D5). -->
+      <form class="create-form" novalidate (ngSubmit)="create()">
+        <label class="form-field">
+          <span>Name <span class="required-marker" aria-hidden="true">*</span></span>
+          <input
+            name="name"
+            required
+            autocomplete="off"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+          />
+        </label>
+        <button type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Create StudentGroup' }}
+        </button>
+      </form>
+      <p class="hint"><span aria-hidden="true">*</span> Required field</p>
+    </section>
+
+    <section class="card" aria-labelledby="group-list-heading">
+      <h2 id="group-list-heading">All StudentGroups</h2>
+
+      <div class="table-wrap">
+        <table class="student-group-list">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (group of studentGroups(); track group.id) {
+              <tr>
+                <td class="name">{{ group.name }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td class="empty">No student groups yet.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   `,
   styles: `
     .create-form {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-end;
-      gap: 1rem;
-      margin-bottom: 1rem;
+      gap: var(--space-3);
     }
 
-    .create-form label {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      font-size: 0.875rem;
-      color: #47506a;
+    .create-form .form-field {
+      flex: 1 1 200px;
     }
 
-    input {
-      padding: 0.375rem 0.5rem;
-      border: 1px solid #dfe3ea;
-      border-radius: 0.375rem;
-      font: inherit;
-      color: #1f2430;
+    .required-marker {
+      color: var(--danger);
     }
 
-    button {
-      padding: 0.5rem 1rem;
-      border: 0;
-      border-radius: 0.375rem;
-      background: #2f6feb;
-      color: #fff;
-      font: inherit;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      background: #9db6e8;
-      cursor: default;
-    }
-
-    .error {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #e5a3a3;
-      border-radius: 0.375rem;
-      background: #fdf1f1;
-      color: #a12a2a;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid #dfe3ea;
-      text-align: left;
-    }
-
-    th {
+    .hint {
+      margin: var(--space-2) 0 0;
       font-size: 0.8125rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #6b7488;
+      color: var(--text-muted);
+    }
+
+    .name {
+      font-weight: 600;
+    }
+
+    .empty {
+      padding: var(--space-4) var(--space-3);
+      text-align: center;
+      color: var(--text-muted);
     }
   `
 })
@@ -115,6 +104,7 @@ export class StudentGroupsPage implements OnInit {
   readonly studentGroups = signal<StudentGroup[]>([]);
   readonly name = signal('');
   readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal<string | null>(null);
   readonly saving = signal(false);
 
   ngOnInit(): void {
@@ -125,12 +115,15 @@ export class StudentGroupsPage implements OnInit {
   }
 
   create(): void {
+    // Clear the previous result before the new one is shown (UI-004).
     this.errorMessage.set(null);
+    this.successMessage.set(null);
     this.saving.set(true);
 
     this.studentGroupService.create({ name: this.name() }).subscribe({
       next: (group) => {
         this.studentGroups.update((groups) => [...groups, group]);
+        this.successMessage.set(`StudentGroup "${group.name}" created.`);
         this.name.set('');
         this.saving.set(false);
       },
