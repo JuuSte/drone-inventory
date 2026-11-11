@@ -4,7 +4,7 @@ This change is frontend-only (backend and API unchanged, see design D6). The Giv
 
 ## 1. Frontend: foundation
 
-- [ ] 1.1 Add the design tokens and global base styles (body, headings, form fields, buttons, tables, `.card`, `.alert`, `.table-wrap`, `.num`, `:focus-visible`) to `src/styles.css` (design D1); verify `ng build` succeeds and `ng test --watch=false` still passes (#48)
+- [x] 1.1 Add the design tokens and global base styles (body, headings, form fields, buttons, tables, `.card`, `.alert`, `.table-wrap`, `.num`, `:focus-visible`) to `src/styles.css` (design D1); verify `ng build` succeeds and `ng test --watch=false` still passes (#48)
 - [ ] 1.2 Rework the layout shell in `app.html`/`app.css`: sticky wrapping navigation, active link with `aria-current="page"`, centered content max 1100px (design D4), with a Vitest test for scenario "Current page is marked in the navigation"; verify the test passes (#49)
 - [ ] 1.3 Add the presentational `app-status-badge` component mapping Available/Returned to success and Loaned/Active to warning (design D2), with Vitest tests for all four statuses; verify the tests pass (#50)
 
