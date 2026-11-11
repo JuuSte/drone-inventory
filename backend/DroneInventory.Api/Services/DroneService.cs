@@ -50,6 +50,34 @@ public class DroneService(AppDbContext context) : IDroneService
                 d.Loans.Any(l => l.Status == LoanStatus.Active) ? DroneStatus.Loaned : DroneStatus.Available))
             .ToListAsync(cancellationToken);
 
+    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var drone = await context.Drones.FindAsync([id], cancellationToken)
+            ?? throw new NotFoundException($"Drone with Id {id} was not found.");
+
+        // Any Loan counts, active or returned: a returned Loan is loan history (REQ-010, design D1).
+        if (await context.Loans.AnyAsync(l => l.DroneId == id, cancellationToken))
+        {
+            throw HasLoans(drone.Name);
+        }
+
+        context.Drones.Remove(drone);
+
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // A concurrent request created a Loan between the check and the delete; the Restrict
+            // foreign key makes the database refuse the delete (design D2).
+            throw HasLoans(drone.Name);
+        }
+    }
+
     private static ConflictException DuplicateName(string name) =>
         new($"A Drone named \"{name}\" already exists.");
+
+    private static ConflictException HasLoans(string name) =>
+        new($"Drone \"{name}\" cannot be deleted because it has Loans.");
 }

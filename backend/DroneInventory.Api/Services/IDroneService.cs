@@ -9,4 +9,10 @@ public interface IDroneService
 
     /// <summary>Lists all Drones ordered by Name; the status is derived from the active Loan, never stored.</summary>
     Task<IReadOnlyList<DroneDto>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a Drone that has no Loans (REQ-011). Throws NotFoundException for an unknown Id and
+    /// ConflictException if any Loan, active or returned, references the Drone, so loan history is never lost.
+    /// </summary>
+    Task DeleteAsync(int id, CancellationToken cancellationToken = default);
 }

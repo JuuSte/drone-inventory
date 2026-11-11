@@ -22,4 +22,14 @@ public class DronesController(IDroneService droneService) : ControllerBase
         var drone = await droneService.CreateAsync(request, cancellationToken);
         return Created($"/api/drones/{drone.Id}", drone);
     }
+
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        await droneService.DeleteAsync(id, cancellationToken);
+        return NoContent();
+    }
 }
