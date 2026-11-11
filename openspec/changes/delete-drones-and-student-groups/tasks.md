@@ -16,7 +16,7 @@ The backend scenarios (REQ-011, REQ-012) get xUnit tests. The `web-ui` scenarios
 
 ## 3. Integration
 
-- [ ] 3.1 With API and UI running, delete a Drone and a StudentGroup without Loans, and try to delete a Drone and a StudentGroup with a returned Loan. Check that the loan history on `/history` is unchanged and that the Delete buttons work with Tab and Enter at 1280px and 375px. Verify `ng build`, `ng test --watch=false` and `dotnet test` pass, and note the results in the PR (#75)
+- [x] 3.1 With API and UI running, delete a Drone and a StudentGroup without Loans, and try to delete a Drone and a StudentGroup with a returned Loan. Check that the loan history on `/history` is unchanged and that the Delete buttons work with Tab and Enter at 1280px and 375px. Verify `ng build`, `ng test --watch=false` and `dotnet test` pass, and note the results in the PR (#75)
 
 ## Workflow follow-up
 
