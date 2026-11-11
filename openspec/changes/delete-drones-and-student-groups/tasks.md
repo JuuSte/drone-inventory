@@ -10,7 +10,7 @@ The backend scenarios (REQ-011, REQ-012) get xUnit tests. The `web-ui` scenarios
 
 ## 2. Frontend: Delete buttons
 
-- [ ] 2.1 Add `delete(id)` to `DroneService` and `StudentGroupService` (`DELETE` to the new endpoints, `Observable<void>`), with Vitest tests using `HttpTestingController` that check the method and URL; verify `ng test --watch=false` passes (#72)
+- [x] 2.1 Add `delete(id)` to `DroneService` and `StudentGroupService` (`DELETE` to the new endpoints, `Observable<void>`), with Vitest tests using `HttpTestingController` that check the method and URL; verify `ng test --watch=false` passes (#72)
 - [ ] 2.2 Add the Delete column and button to the `/drones` page, with `aria-label` "Delete Drone {Name}", a `deletingId` signal, and the success and error alerts in the list card (design D4). Add Vitest tests for scenarios "Drone is deleted from the Drones page", "Rejected delete keeps the row", "Delete button names its row" and "Button is disabled while deleting"; verify `ng test --watch=false` passes (#73)
 - [ ] 2.3 Add the Delete column and button to the `/student-groups` page the same way, with `aria-label` "Delete StudentGroup {Name}" (design D4). Add Vitest tests for scenarios "StudentGroup is deleted from the Student Groups page" and "Rejected StudentGroup delete keeps the row"; verify `ng test --watch=false` passes (#74)
 

@@ -53,4 +53,16 @@ describe('DroneService', () => {
     request.flush(created);
     expect(result).toEqual(created);
   });
+
+  it('should delete a drone with DELETE /api/drones/{id}', () => {
+    let completed = false;
+
+    service.delete(3).subscribe({ complete: () => (completed = true) });
+
+    const request = httpMock.expectOne(`${url}/3`);
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.body).toBeNull();
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    expect(completed).toBe(true);
+  });
 });
