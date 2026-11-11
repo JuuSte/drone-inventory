@@ -26,7 +26,7 @@
 - [x] 5.3 Create Battery and Propeller LoanItems and reject negative quantities (400) with xUnit tests for scenarios "Loan with batteries and propellers" and "Negative quantity"; verify the tests pass (#10)
 - [x] 5.4 Implement `GET /api/loans/active` with xUnit tests for scenarios "Active Loan is listed" (fixed date 19.08.2026) and "Returned Loan is not listed as active"; verify the tests pass (#11)
 - [x] 5.5 Implement `POST /api/loans/{id}/return` setting Status Returned and ReturnDate from `TimeProvider` with xUnit tests for scenarios "Active Loan is returned", "Return twice", "Unknown Loan" and "ReturnDate is set"; verify the tests pass (#12)
-- [ ] 5.6 Implement `GET /api/loans/history` with xUnit tests for scenarios "Returned Loan appears in history" and "Loan is never deleted"; verify the tests pass (#13)
+- [x] 5.6 Implement `GET /api/loans/history` with xUnit tests for scenarios "Returned Loan appears in history" and "Loan is never deleted"; verify the tests pass (#13)
 - [ ] 5.7 Add `WebApplicationFactory` tests checking the HTTP status mapping (201, 400, 404, 409) for one endpoint per error type; verify the tests pass (#14)
 
 ## 6. Frontend setup

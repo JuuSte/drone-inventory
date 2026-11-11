@@ -13,6 +13,11 @@ public class LoansController(ILoanService loanService) : ControllerBase
     public async Task<IReadOnlyList<LoanDto>> GetActive(CancellationToken cancellationToken) =>
         await loanService.GetActiveAsync(cancellationToken);
 
+    [HttpGet("history")]
+    [ProducesResponseType<IReadOnlyList<LoanDto>>(StatusCodes.Status200OK)]
+    public async Task<IReadOnlyList<LoanDto>> GetHistory(CancellationToken cancellationToken) =>
+        await loanService.GetHistoryAsync(cancellationToken);
+
     [HttpPost]
     [ProducesResponseType<LoanDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
