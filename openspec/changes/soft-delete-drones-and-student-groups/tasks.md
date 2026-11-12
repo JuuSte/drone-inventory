@@ -18,7 +18,7 @@ The backend scenarios (REQ-011, REQ-012) get xUnit tests. The `web-ui` scenarios
 
 ## 3. Integration
 
-- [ ] 3.1 With API and UI running on a database migrated from the previous version, do three things. First, delete a Drone and a StudentGroup that have only returned Loans: check they disappear from their pages and from the Loan form, and that `/history` still shows their Loans with their Names. Second, try to delete a Drone with an active Loan and check that the error alert appears. Third, create a new Drone with the deleted Name. Verify `ng build`, `ng test --watch=false` and `dotnet test` pass, and note the results in the PR (#96)
+- [x] 3.1 With API and UI running on a database migrated from the previous version, do three things. First, delete a Drone and a StudentGroup that have only returned Loans: check they disappear from their pages and from the Loan form, and that `/history` still shows their Loans with their Names. Second, try to delete a Drone with an active Loan and check that the error alert appears. Third, create a new Drone with the deleted Name. Verify `ng build`, `ng test --watch=false` and `dotnet test` pass, and note the results in the PR (#96)
 
 ## Workflow follow-up
 
