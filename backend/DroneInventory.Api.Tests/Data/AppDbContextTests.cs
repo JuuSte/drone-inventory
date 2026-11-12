@@ -92,6 +92,95 @@ public class AppDbContextTests : IDisposable
         await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
     }
 
+    // Database layer of "Name of a deleted Drone is reused" (design D5): the unique Name index
+    // only counts Drones that are not deleted.
+    [Fact]
+    public async Task Drone_Name_of_a_deleted_Drone_can_be_stored_again()
+    {
+        var (drone, _, _) = await SeedAsync();
+        await using (var context = _db.CreateContext())
+        {
+            (await context.Drones.SingleAsync(d => d.Id == drone.Id)).IsDeleted = true;
+            await context.SaveChangesAsync();
+        }
+
+        await using (var context = _db.CreateContext())
+        {
+            context.Drones.Add(new Drone { Name = "TELLO-07", Description = "replacement" });
+            await context.SaveChangesAsync();
+        }
+
+        await using var verify = _db.CreateContext();
+        Assert.Equal(2, await verify.Drones.CountAsync(d => d.Name == "TELLO-07"));
+        Assert.Equal(1, await verify.Drones.CountAsync(d => d.Name == "TELLO-07" && !d.IsDeleted));
+    }
+
+    [Fact]
+    public async Task Drone_Name_stays_unique_among_Drones_that_are_not_deleted()
+    {
+        var (drone, _, _) = await SeedAsync();
+        await using (var context = _db.CreateContext())
+        {
+            (await context.Drones.SingleAsync(d => d.Id == drone.Id)).IsDeleted = true;
+            await context.SaveChangesAsync();
+        }
+
+        await using (var context = _db.CreateContext())
+        {
+            context.Drones.Add(new Drone { Name = "TELLO-07", Description = "replacement" });
+            await context.SaveChangesAsync();
+        }
+
+        await using var duplicate = _db.CreateContext();
+        duplicate.Drones.Add(new Drone { Name = "tello-07", Description = "" });
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => duplicate.SaveChangesAsync());
+    }
+
+    // Database layer of "Name of a deleted StudentGroup is reused" (design D5).
+    [Fact]
+    public async Task StudentGroup_Name_of_a_deleted_StudentGroup_can_be_stored_again()
+    {
+        var (_, first, _) = await SeedAsync();
+        await using (var context = _db.CreateContext())
+        {
+            (await context.StudentGroups.SingleAsync(g => g.Id == first.Id)).IsDeleted = true;
+            await context.SaveChangesAsync();
+        }
+
+        await using (var context = _db.CreateContext())
+        {
+            context.StudentGroups.Add(new StudentGroup { Name = "Group 3" });
+            await context.SaveChangesAsync();
+        }
+
+        await using var verify = _db.CreateContext();
+        Assert.Equal(2, await verify.StudentGroups.CountAsync(g => g.Name == "Group 3"));
+        Assert.Equal(1, await verify.StudentGroups.CountAsync(g => g.Name == "Group 3" && !g.IsDeleted));
+    }
+
+    [Fact]
+    public async Task StudentGroup_Name_stays_unique_among_StudentGroups_that_are_not_deleted()
+    {
+        var (_, first, _) = await SeedAsync();
+        await using (var context = _db.CreateContext())
+        {
+            (await context.StudentGroups.SingleAsync(g => g.Id == first.Id)).IsDeleted = true;
+            await context.SaveChangesAsync();
+        }
+
+        await using (var context = _db.CreateContext())
+        {
+            context.StudentGroups.Add(new StudentGroup { Name = "Group 3" });
+            await context.SaveChangesAsync();
+        }
+
+        await using var duplicate = _db.CreateContext();
+        duplicate.StudentGroups.Add(new StudentGroup { Name = "GROUP 3" });
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => duplicate.SaveChangesAsync());
+    }
+
     [Fact]
     public async Task Drone_with_Loans_cannot_be_deleted()
     {
