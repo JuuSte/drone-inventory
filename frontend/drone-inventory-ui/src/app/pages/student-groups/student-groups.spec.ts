@@ -215,7 +215,7 @@ describe('StudentGroupsPage', () => {
     expect(confirmation.classList).toContain('alert--success');
   });
 
-  // GIVEN the StudentGroup "Group 3" has at least one Loan
+  // GIVEN the StudentGroup "Group 3" has an active Loan
   // WHEN the user presses "Delete" in the row of "Group 3"
   // THEN the backend error message is shown in an error alert
   // AND the row of "Group 3" is still in the StudentGroups table
@@ -228,7 +228,7 @@ describe('StudentGroupsPage', () => {
     httpMock.expectOne(`${url}/1`).flush(
       {
         title: 'Conflict',
-        detail: 'StudentGroup "Group 3" cannot be deleted because it has Loans.',
+        detail: 'StudentGroup "Group 3" cannot be deleted because it has an active Loan.',
         status: 409
       },
       { status: 409, statusText: 'Conflict' }
@@ -237,7 +237,7 @@ describe('StudentGroupsPage', () => {
 
     const alert = element('[role="alert"]')!;
     expect(alert.textContent?.trim()).toBe(
-      'StudentGroup "Group 3" cannot be deleted because it has Loans.'
+      'StudentGroup "Group 3" cannot be deleted because it has an active Loan.'
     );
     expect(alert.classList).toContain('alert--error');
     expect(names()).toEqual(['Group 3']);
