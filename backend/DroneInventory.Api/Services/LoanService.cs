@@ -17,10 +17,25 @@ public class LoanService(AppDbContext context, TimeProvider timeProvider) : ILoa
             throw new ValidationException("Quantities must be greater than or equal to 0.");
         }
 
-        var drone = await context.Drones.FindAsync([request.DroneId], cancellationToken)
-            ?? throw new NotFoundException($"Drone with Id {request.DroneId} was not found.");
-        var group = await context.StudentGroups.FindAsync([request.StudentGroupId], cancellationToken)
-            ?? throw new NotFoundException($"StudentGroup with Id {request.StudentGroupId} was not found.");
+        // Lock the Drone and StudentGroup rows first (design D4): the no-op UPDATEs skip deleted entries and
+        // take SQLite's write lock until the Loan is committed, so a concurrent delete waits and then sees
+        // the active Loan. A deleted Drone or StudentGroup cannot be loaned (REQ-011, REQ-012).
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+        if (await context.Drones
+                .Where(d => d.Id == request.DroneId && !d.IsDeleted)
+                .ExecuteUpdateAsync(s => s.SetProperty(d => d.IsDeleted, d => d.IsDeleted), cancellationToken) == 0)
+        {
+            throw new NotFoundException($"Drone with Id {request.DroneId} was not found.");
+        }
+        if (await context.StudentGroups
+                .Where(g => g.Id == request.StudentGroupId && !g.IsDeleted)
+                .ExecuteUpdateAsync(s => s.SetProperty(g => g.IsDeleted, g => g.IsDeleted), cancellationToken) == 0)
+        {
+            throw new NotFoundException($"StudentGroup with Id {request.StudentGroupId} was not found.");
+        }
+
+        var drone = (await context.Drones.FindAsync([request.DroneId], cancellationToken))!;
+        var group = (await context.StudentGroups.FindAsync([request.StudentGroupId], cancellationToken))!;
 
         // Service check gives a clear 409; the filtered unique index covers concurrent requests (design D2).
         if (await context.Loans.AnyAsync(l => l.DroneId == drone.Id && l.Status == LoanStatus.Active, cancellationToken))
@@ -45,6 +60,7 @@ public class LoanService(AppDbContext context, TimeProvider timeProvider) : ILoa
         try
         {
             await context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
         catch (DbUpdateException ex) when (IsActiveLoanIndexViolation(ex))
         {

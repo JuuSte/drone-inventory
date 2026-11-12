@@ -59,6 +59,10 @@ public class LoanServiceNoDoubleLoanTests : IDisposable
 
     // Same scenario, but the competing Loan is inserted after the service check (concurrent request):
     // the DbUpdateException from the filtered unique index is mapped to the same conflict (design D2).
+    // The test database is a single shared in-memory connection, so the competing insert runs inside the
+    // service's Loan transaction (soft-delete design D4) and is rolled back with it. In production a second
+    // request would use its own connection and be blocked by that transaction's write lock instead.
+    // So this test checks the conflict mapping and that the rejected request stored no Loan of its own.
     [Fact]
     public async Task Drone_is_already_loaned_by_a_concurrent_request()
     {
@@ -71,7 +75,10 @@ public class LoanServiceNoDoubleLoanTests : IDisposable
         }
 
         Assert.True(interceptor.Inserted);
-        Assert.Equal(1, await CountActiveLoansAsync(droneId));
+        await using var verify = _db.CreateContext();
+        Assert.False(await verify.Loans.AnyAsync(l => l.DroneId == droneId && l.StudentGroupId == secondGroupId));
+        // The competing insert shared the rolled-back transaction, so no active Loan is left at all.
+        Assert.Equal(0, await CountActiveLoansAsync(droneId));
     }
 
     [Fact]
