@@ -1,6 +1,7 @@
 using DroneInventory.Api.Data;
 using DroneInventory.Api.Dtos;
 using DroneInventory.Api.Exceptions;
+using DroneInventory.Api.Models;
 using DroneInventory.Api.Services;
 using DroneInventory.Api.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -73,5 +74,43 @@ public class StudentGroupServiceCreateTests : IDisposable
 
         await using var verify = _db.CreateContext();
         Assert.Equal(1, await verify.StudentGroups.CountAsync(g => g.Name == "Group 3"));
+    }
+
+    // GIVEN the StudentGroup "Group 3" was deleted and has a returned Loan
+    // WHEN a new StudentGroup with Name "Group 3" is created
+    // THEN the new StudentGroup is stored and listed
+    // AND the loan history still shows the returned Loan of the deleted "Group 3"
+    [Fact]
+    public async Task Name_of_a_deleted_StudentGroup_is_reused()
+    {
+        var deleted = await CreateAsync("Group 3");
+        await using (var context = _db.CreateContext())
+        {
+            context.Loans.Add(new Loan
+            {
+                Drone = new Drone { Name = "TELLO-07", Description = "DJI Tello" },
+                StudentGroupId = deleted.Id,
+                LoanDate = new DateOnly(2026, 8, 18),
+                ReturnDate = new DateOnly(2026, 8, 19),
+                Status = LoanStatus.Returned
+            });
+            await context.SaveChangesAsync();
+        }
+        await using (var context = _db.CreateContext())
+        {
+            await new StudentGroupService(context).DeleteAsync(deleted.Id);
+        }
+
+        var created = await CreateAsync("Group 3");
+
+        Assert.NotEqual(deleted.Id, created.Id);
+        Assert.Equal("Group 3", created.Name);
+        await using var verify = _db.CreateContext();
+        var listed = Assert.Single(await new StudentGroupService(verify).GetAllAsync());
+        Assert.Equal(created.Id, listed.Id);
+        Assert.Equal("Group 3", listed.Name);
+        var history = Assert.Single(await new LoanService(verify, _db.TimeProvider).GetHistoryAsync());
+        Assert.Equal(deleted.Id, history.StudentGroupId);
+        Assert.Equal("Group 3", history.StudentGroupName);
     }
 }
