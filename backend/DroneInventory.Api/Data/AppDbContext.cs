@@ -8,6 +8,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     /// <summary>Name of the filtered unique index that allows only one active Loan per Drone (design D2).</summary>
     public const string ActiveLoanPerDroneIndex = "IX_Loans_DroneId_Active";
 
+    /// <summary>Index filter that limits a unique Name to entries that are not deleted (design D5).</summary>
+    private const string NotDeletedFilter = "\"IsDeleted\" = 0";
+
     public DbSet<Drone> Drones => Set<Drone>();
     public DbSet<StudentGroup> StudentGroups => Set<StudentGroup>();
     public DbSet<Loan> Loans => Set<Loan>();
@@ -19,13 +22,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             drone.Property(d => d.Name).IsRequired().UseCollation("NOCASE");
             drone.Property(d => d.Description).IsRequired();
-            drone.HasIndex(d => d.Name).IsUnique();
+            // A Name is unique among Drones that are not deleted, so a deleted Name can be reused.
+            drone.HasIndex(d => d.Name).IsUnique().HasFilter(NotDeletedFilter);
         });
 
         modelBuilder.Entity<StudentGroup>(group =>
         {
             group.Property(g => g.Name).IsRequired().UseCollation("NOCASE");
-            group.HasIndex(g => g.Name).IsUnique();
+            // A Name is unique among StudentGroups that are not deleted, so a deleted Name can be reused.
+            group.HasIndex(g => g.Name).IsUnique().HasFilter(NotDeletedFilter);
         });
 
         modelBuilder.Entity<Loan>(loan =>
