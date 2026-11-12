@@ -13,7 +13,7 @@ The backend scenarios (REQ-011, REQ-012) get xUnit tests. The `web-ui` scenarios
 
 ## 2. Frontend: Delete button tests
 
-- [ ] 2.1 Update the Vitest tests on the `/drones` page. "Rejected delete keeps the row" now uses an active Loan and the new backend message. Add "Drone with only returned Loans is deleted from the Drones page", which checks that the row is removed after a 204 (design D8). No production code change. Verify `ng test --watch=false` passes (#94)
+- [x] 2.1 Update the Vitest tests on the `/drones` page. "Rejected delete keeps the row" now uses an active Loan and the new backend message. Add "Drone with only returned Loans is deleted from the Drones page", which checks that the row is removed after a 204 (design D8). No production code change. Verify `ng test --watch=false` passes (#94)
 - [ ] 2.2 Update the Vitest test "Rejected StudentGroup delete keeps the row" on the `/student-groups` page with an active Loan and the new backend message. No production code change. Verify `ng test --watch=false` passes (#95)
 
 ## 3. Integration
