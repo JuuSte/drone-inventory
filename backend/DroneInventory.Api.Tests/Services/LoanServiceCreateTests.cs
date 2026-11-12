@@ -91,4 +91,46 @@ public class LoanServiceCreateTests : IDisposable
 
         Assert.Equal(0, await CountLoansAsync());
     }
+
+    // GIVEN the Drone "TELLO-07" was deleted and the StudentGroup "Group 3" exists
+    // WHEN a Loan of "TELLO-07" to "Group 3" is created
+    // THEN the request is rejected as not found AND no Loan is stored
+    [Fact]
+    public async Task Deleted_Drone_cannot_be_loaned()
+    {
+        var (droneId, groupId) = await SeedAsync();
+        await using (var context = _db.CreateContext())
+        {
+            await new DroneService(context).DeleteAsync(droneId);
+        }
+
+        var error = await Assert.ThrowsAsync<NotFoundException>(() => CreateAsync(droneId, groupId));
+
+        Assert.Equal($"Drone with Id {droneId} was not found.", error.Message);
+        Assert.Equal(0, await CountLoansAsync());
+        await using var verify = _db.CreateContext();
+        Assert.Equal(0, await verify.LoanItems.CountAsync());
+    }
+
+    // GIVEN the StudentGroup "Group 3" was deleted and the Drone "TELLO-07" is available
+    // WHEN a Loan of "TELLO-07" to "Group 3" is created
+    // THEN the request is rejected as not found AND "TELLO-07" stays "Available"
+    [Fact]
+    public async Task Deleted_StudentGroup_cannot_be_selected_for_a_Loan()
+    {
+        var (droneId, groupId) = await SeedAsync();
+        await using (var context = _db.CreateContext())
+        {
+            await new StudentGroupService(context).DeleteAsync(groupId);
+        }
+
+        var error = await Assert.ThrowsAsync<NotFoundException>(() => CreateAsync(droneId, groupId));
+
+        Assert.Equal($"StudentGroup with Id {groupId} was not found.", error.Message);
+        Assert.Equal(0, await CountLoansAsync());
+        await using var verify = _db.CreateContext();
+        var drone = Assert.Single(await new DroneService(verify).GetAllAsync());
+        Assert.Equal("TELLO-07", drone.Name);
+        Assert.Equal(DroneStatus.Available, drone.Status);
+    }
 }
