@@ -116,7 +116,7 @@ public sealed class HttpStatusMappingTests : IDisposable
         Assert.Equal("Drone with Id 999 was not found.", problem.Detail);
     }
 
-    // DELETE /api/drones/{id} for a Drone with a Loan -> ConflictException -> 409 ProblemDetails,
+    // DELETE /api/drones/{id} for a Drone with an active Loan -> ConflictException -> 409 ProblemDetails,
     // the Drone stays listed as "Loaned" (REQ-011).
     [Fact]
     public async Task Delete_of_drone_with_a_loan_returns_409()
@@ -130,7 +130,7 @@ public sealed class HttpStatusMappingTests : IDisposable
         var response = await _client.DeleteAsync($"/api/drones/{drone.Id}");
 
         var problem = await ReadProblemAsync(response, HttpStatusCode.Conflict);
-        Assert.Equal("Drone \"TELLO-07\" cannot be deleted because it has Loans.", problem.Detail);
+        Assert.Equal("Drone \"TELLO-07\" cannot be deleted because it has an active Loan.", problem.Detail);
         var stored = Assert.Single(await GetDronesAsync());
         Assert.Equal(DroneStatus.Loaned, stored.Status);
     }

@@ -17,7 +17,8 @@ public class DroneService(AppDbContext context) : IDroneService
         }
 
         // Names are compared case-insensitively via the NOCASE collation of the Name column.
-        if (await context.Drones.AnyAsync(d => d.Name == name, cancellationToken))
+        // Only Drones that are not deleted count, so a deleted Name can be reused (design D5).
+        if (await context.Drones.AnyAsync(d => d.Name == name && !d.IsDeleted, cancellationToken))
         {
             throw DuplicateName(name);
         }
@@ -42,6 +43,7 @@ public class DroneService(AppDbContext context) : IDroneService
     public async Task<IReadOnlyList<DroneDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
         await context.Drones
             .AsNoTracking()
+            .Where(d => !d.IsDeleted)
             .OrderBy(d => d.Name)
             .Select(d => new DroneDto(
                 d.Id,
@@ -52,32 +54,25 @@ public class DroneService(AppDbContext context) : IDroneService
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var drone = await context.Drones.FindAsync([id], cancellationToken)
+        // Soft delete as one conditional UPDATE: the active-Loan check and the write happen in the same
+        // SQL statement, so no Loan can be created in between (design D3). Returned Loans do not block
+        // the delete; they stay unchanged and keep showing the Drone Name in the loan history (REQ-011).
+        var updated = await context.Drones
+            .Where(d => d.Id == id && !d.IsDeleted && !d.Loans.Any(l => l.Status == LoanStatus.Active))
+            .ExecuteUpdateAsync(s => s.SetProperty(d => d.IsDeleted, true), cancellationToken);
+        if (updated == 1)
+        {
+            return;
+        }
+
+        // Nothing was updated: find out why to return the right error.
+        var drone = await context.Drones
+            .AsNoTracking()
+            .SingleOrDefaultAsync(d => d.Id == id && !d.IsDeleted, cancellationToken)
             ?? throw new NotFoundException($"Drone with Id {id} was not found.");
-
-        // Any Loan counts, active or returned: a returned Loan is loan history (REQ-010, design D1).
-        if (await context.Loans.AnyAsync(l => l.DroneId == id, cancellationToken))
-        {
-            throw HasLoans(drone.Name);
-        }
-
-        context.Drones.Remove(drone);
-
-        try
-        {
-            await context.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException)
-        {
-            // A concurrent request created a Loan between the check and the delete; the Restrict
-            // foreign key makes the database refuse the delete (design D2).
-            throw HasLoans(drone.Name);
-        }
+        throw new ConflictException($"Drone \"{drone.Name}\" cannot be deleted because it has an active Loan.");
     }
 
     private static ConflictException DuplicateName(string name) =>
         new($"A Drone named \"{name}\" already exists.");
-
-    private static ConflictException HasLoans(string name) =>
-        new($"Drone \"{name}\" cannot be deleted because it has Loans.");
 }
