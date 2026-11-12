@@ -85,28 +85,30 @@ Returned loans SHALL be kept and displayed as loan history.
 - AND the loan is never deleted
 
 ## REQ-011 Delete Drone
-A drone SHALL only be deleted if it has no Loans (active or returned).
-- GIVEN the drone "TELLO-08" has no Loans
-- WHEN "TELLO-08" is deleted
-- THEN the drone is removed and no longer listed
+A drone SHALL be deletable if it has no active Loan. A deleted drone SHALL no longer be listed
+or loanable, but SHALL remain visible in the loan history.
+- GIVEN the drone "TELLO-07" has only returned Loans
+- WHEN "TELLO-07" is deleted
+- THEN "TELLO-07" is no longer listed and cannot be loaned
+- AND the loan history still shows "TELLO-07"
 
-Scenario: Drone with loan history
-- GIVEN the drone "TELLO-07" has at least one Loan
+Scenario: Drone with active loan
+- GIVEN "TELLO-07" has an active Loan
 - WHEN "TELLO-07" is deleted
 - THEN the request is rejected
-- AND the drone and its Loans remain stored
 
 ## REQ-012 Delete Student Group
-A student group SHALL only be deleted if it has no Loans (active or returned).
-- GIVEN the student group "Group 5" has no Loans
-- WHEN "Group 5" is deleted
-- THEN the student group is removed and no longer listed
+A student group SHALL be deletable if it has no active Loan. A deleted student group SHALL no
+longer be listed or selectable for a loan, but SHALL remain visible in the loan history.
+- GIVEN the student group "Group 3" has only returned Loans
+- WHEN "Group 3" is deleted
+- THEN "Group 3" is no longer listed and cannot be selected for a Loan
+- AND the loan history still shows "Group 3"
 
-Scenario: Student group with loan history
-- GIVEN the student group "Group 3" has at least one Loan
+Scenario: Student group with active loan
+- GIVEN "Group 3" has an active Loan
 - WHEN "Group 3" is deleted
 - THEN the request is rejected
-- AND the student group and its Loans remain stored
 
 ## Out of Scope
 - Login, user accounts, roles
