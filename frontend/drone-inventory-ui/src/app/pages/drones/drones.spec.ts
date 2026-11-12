@@ -283,7 +283,29 @@ describe('DronesPage', () => {
     expect(confirmation.classList).toContain('alert--success');
   });
 
-  // GIVEN the Drone "TELLO-07" has at least one Loan
+  // GIVEN the Drone "TELLO-07" has only returned Loans
+  // WHEN the user presses "Delete" in the row of "TELLO-07"
+  // THEN the row of "TELLO-07" is removed from the Drones table
+  // (that the History page still shows its Loans is checked by the xUnit HTTP test
+  //  Http/LoanListsAfterDeleteTests; this component test has no History page)
+  it('Drone with only returned Loans is deleted from the Drones page', () => {
+    flushDrones([
+      { id: 1, name: 'TELLO-07', description: '', status: 'Available' },
+      { id: 2, name: 'TELLO-08', description: '', status: 'Available' }
+    ]);
+
+    deleteButton('TELLO-07').click();
+    fixture.detectChanges();
+
+    const request = httpMock.expectOne(`${url}/1`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    fixture.detectChanges();
+
+    expect(rowsText().map((row) => row[0])).toEqual(['TELLO-08']);
+  });
+
+  // GIVEN the Drone "TELLO-07" has an active Loan
   // WHEN the user presses "Delete" in the row of "TELLO-07"
   // THEN the backend error message is shown in an error alert
   // AND the row of "TELLO-07" is still in the Drones table
@@ -296,7 +318,7 @@ describe('DronesPage', () => {
     httpMock.expectOne(`${url}/1`).flush(
       {
         title: 'Conflict',
-        detail: 'Drone "TELLO-07" cannot be deleted because it has Loans.',
+        detail: 'Drone "TELLO-07" cannot be deleted because it has an active Loan.',
         status: 409
       },
       { status: 409, statusText: 'Conflict' }
@@ -304,7 +326,9 @@ describe('DronesPage', () => {
     fixture.detectChanges();
 
     const alert = element('[role="alert"]')!;
-    expect(alert.textContent?.trim()).toBe('Drone "TELLO-07" cannot be deleted because it has Loans.');
+    expect(alert.textContent?.trim()).toBe(
+      'Drone "TELLO-07" cannot be deleted because it has an active Loan.'
+    );
     expect(alert.classList).toContain('alert--error');
     expect(rowsText().map((row) => row[0])).toEqual(['TELLO-07']);
   });
