@@ -81,4 +81,44 @@ public class DroneServiceCreateTests : IDisposable
         await using var verify = _db.CreateContext();
         Assert.Equal(1, await verify.Drones.CountAsync(d => d.Name == "TELLO-07"));
     }
+
+    // GIVEN the Drone "TELLO-07" was deleted and has a returned Loan
+    // WHEN a new Drone with Name "TELLO-07" is created
+    // THEN the new Drone is stored and listed as "Available"
+    // AND the loan history still shows the returned Loan of the deleted "TELLO-07"
+    [Fact]
+    public async Task Name_of_a_deleted_Drone_is_reused()
+    {
+        var deleted = await CreateAsync("TELLO-07");
+        await using (var context = _db.CreateContext())
+        {
+            var group = new StudentGroup { Name = "Group 3" };
+            context.Loans.Add(new Loan
+            {
+                DroneId = deleted.Id,
+                StudentGroup = group,
+                LoanDate = new DateOnly(2026, 8, 18),
+                ReturnDate = new DateOnly(2026, 8, 19),
+                Status = LoanStatus.Returned
+            });
+            await context.SaveChangesAsync();
+        }
+        await using (var context = _db.CreateContext())
+        {
+            await new DroneService(context).DeleteAsync(deleted.Id);
+        }
+
+        var created = await CreateAsync("TELLO-07", "replacement");
+
+        Assert.NotEqual(deleted.Id, created.Id);
+        Assert.Equal(DroneStatus.Available, created.Status);
+        await using var verify = _db.CreateContext();
+        var listed = Assert.Single(await new DroneService(verify).GetAllAsync());
+        Assert.Equal(created.Id, listed.Id);
+        Assert.Equal("TELLO-07", listed.Name);
+        Assert.Equal(DroneStatus.Available, listed.Status);
+        var history = Assert.Single(await new LoanService(verify, _db.TimeProvider).GetHistoryAsync());
+        Assert.Equal(deleted.Id, history.DroneId);
+        Assert.Equal("TELLO-07", history.DroneName);
+    }
 }
