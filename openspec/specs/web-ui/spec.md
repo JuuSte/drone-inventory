@@ -112,8 +112,14 @@ Every row of the Drones table and of the StudentGroups table SHALL have a "Delet
 - **THEN** the row of "TELLO-08" is removed from the Drones table
 - **AND** a confirmation is shown
 
+#### Scenario: Drone with only returned Loans is deleted from the Drones page
+- **GIVEN** the Drone "TELLO-07" has only returned Loans
+- **WHEN** the user presses "Delete" in the row of "TELLO-07"
+- **THEN** the row of "TELLO-07" is removed from the Drones table
+- **AND** the History page still shows the Loans of "TELLO-07"
+
 #### Scenario: Rejected delete keeps the row
-- **GIVEN** the Drone "TELLO-07" has at least one Loan
+- **GIVEN** the Drone "TELLO-07" has an active Loan
 - **WHEN** the user presses "Delete" in the row of "TELLO-07"
 - **THEN** the backend error message is shown in an error alert
 - **AND** the row of "TELLO-07" is still in the Drones table
@@ -125,7 +131,7 @@ Every row of the Drones table and of the StudentGroups table SHALL have a "Delet
 - **AND** a confirmation is shown
 
 #### Scenario: Rejected StudentGroup delete keeps the row
-- **GIVEN** the StudentGroup "Group 3" has at least one Loan
+- **GIVEN** the StudentGroup "Group 3" has an active Loan
 - **WHEN** the user presses "Delete" in the row of "Group 3"
 - **THEN** the backend error message is shown in an error alert
 - **AND** the row of "Group 3" is still in the StudentGroups table
